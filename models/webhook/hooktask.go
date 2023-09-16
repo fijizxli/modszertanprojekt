@@ -16,6 +16,8 @@ import (
 	webhook_module "code.gitea.io/gitea/modules/webhook"
 
 	gouuid "github.com/google/uuid"
+
+        "github.com/tidwall/sjson"
 )
 
 //   ___ ___                __   ___________              __
@@ -119,7 +121,8 @@ func CreateHookTask(ctx context.Context, t *HookTask) (*HookTask, error) {
 		if err != nil {
 			return nil, err
 		}
-		t.PayloadContent = string(data)
+		data2, _ := sjson.Set(string(data), "event_type", string(t.EventType)) //TODO probably inefficient conversion?
+		t.PayloadContent = string(data2)
 	}
 	if t.Delivered == 0 {
 		t.Delivered = timeutil.TimeStampNanoNow()
