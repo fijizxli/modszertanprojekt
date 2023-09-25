@@ -16,4 +16,5 @@ TODO: build?, refactor?, style?
 - To (temporarily) disable SSL certificate verification in the scope of your repo, until we get LetsEncrypt or something:
 https://stackoverflow.com/questions/11621768/how-can-i-make-git-accept-a-self-signed-certificate
 `git config --local http.sslVerify false`
+TODO: add some kind of alerting for this
 TODO: would be a better option to make the cert accessible and add it to a store per https://stackoverflow.com/a/26785963
