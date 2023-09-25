@@ -29,6 +29,7 @@ from .sticker import Sticker
 
 if TYPE_CHECKING:
     from .attachment import Attachment
+    from .mention import Mention
     from .message_sender import MessageSender
     from .link_preview import LinkPreview
     from .profile import Profile
@@ -84,6 +85,7 @@ class Message:
     async def reply(self,
                     body: str,
                     attachments: List[Attachment] = [],
+                    mentions: List[Mention] = [],
                     quote: bool = False,
                     reaction: bool = False,
                     mark_read: bool = True,
@@ -101,6 +103,7 @@ class Message:
         :rtype: bool
         """
         return await self._sender.reply_message(self, Reply(body, attachments,
+                                                            mentions,
                                                             quote, reaction,
                                                             mark_read, link_previews))
 

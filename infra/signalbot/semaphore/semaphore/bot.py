@@ -27,6 +27,7 @@ from typing import (
 import anyio
 
 from .attachment import Attachment
+from .mention import Mention
 from .chat_context import ChatContext
 from .exceptions import StopPropagation
 from .groupV2 import GroupV2
@@ -179,7 +180,7 @@ class Bot:
         if self._send_socket:
             await self._send_socket.__aexit__(*excinfo)
 
-    async def start(self) -> None:
+    async def start(self, cb) -> None:
         """Start the bot event loop."""
         self.log.info("Bot started")
         self._receive_socket = await Socket(self._username,
@@ -196,6 +197,7 @@ class Bot:
         async with anyio.create_task_group() as tg:
             self._job_queue = JobQueue(self._sender)
             await tg.spawn(self._job_queue.start)
+            await cb(self)
 
             # handle incoming messages in parallel
             async for message in self._receiver.receive():
@@ -203,6 +205,7 @@ class Bot:
                     await tg.spawn(self._match_message, message)
 
     async def send_message(self, receiver: str, body: str,
+                           mentions: Optional[List[Mention]] = None,
                            attachments: Optional[List[Attachment]] = None,
                            link_previews: Optional[List[LinkPreview]] = None) -> bool:
         """
@@ -216,7 +219,7 @@ class Bot:
         :return: Returns whether sending is successful
         :rtype: bool
         """
-        return await self._sender.send_message(receiver, body, attachments, link_previews)
+        return await self._sender.send_message(receiver, body, mentions, attachments, link_previews)
 
     async def set_profile(self,
                           profile_name: str,
@@ -260,6 +263,9 @@ class Bot:
         :return: Returns a list of v2 group objects
         """
         return await self._sender.list_groups()
+
+    async def list_accounts(self) -> List:
+        return await self._sender.list_accounts()
 
     async def get_group(self, group_id: str) -> GroupV2:
         """

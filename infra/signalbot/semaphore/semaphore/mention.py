@@ -33,3 +33,7 @@ class Mention:
     @staticmethod
     def create_from_receive_dict(data: dict) -> 'Mention':
         return Mention(**data)
+
+    def to_send_dict(self) -> dict:
+        return attr.asdict(self)
+

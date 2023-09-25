@@ -33,6 +33,7 @@ class Reply:
 
     body: str
     attachments: List[Attachment] = attr.ib(default=[])
+    mentions: List[Mention] = attr.ib(default=[])
     quote: bool = attr.ib(default=False)
     reaction: bool = attr.ib(default=False)
     mark_read: bool = attr.ib(default=True)

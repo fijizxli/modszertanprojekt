@@ -66,6 +66,8 @@ class MessageSender:
                 self.log.debug("Waiting for response of get_group")
             elif message.get('type') == 'list_groups':
                 self.log.debug("Waiting for response of list_groups")
+            elif message.get('type') == 'list_accounts':
+                self.log.debug("Waiting for response of list_accounts")
             elif message.get('type') == 'update_group':
                 self.log.debug("Waiting for response of update_group")
             elif message.get('type') == 'create_group':
@@ -101,6 +103,9 @@ class MessageSender:
                             group
                         ) for group in response_wrapper.get('data', {})['groups']
                     ]
+
+                if response_wrapper.get('type') == 'list_accounts':
+                    return response_wrapper.get('data', {})['accounts']
 
                 if response_wrapper.get('type') == 'get_group':
                     return GroupV2.create_from_receive_dict(
@@ -168,6 +173,7 @@ class MessageSender:
             return False
 
     async def send_message(self, receiver: str, body: str,
+                           mentions: Optional[List[Mention]] = None,
                            attachments: Optional[List[Attachment]] = None,
                            link_previews: Optional[List[LinkPreview]] = None) -> bool:
         """
@@ -204,6 +210,11 @@ class MessageSender:
         if link_previews:
             bot_message["previews"] = [
                 link_preview.to_send_dict() for link_preview in link_previews
+            ]
+
+        if mentions:
+            bot_message["mentions"] = [
+                mention.to_send_dict() for mention in mentions
             ]
 
         return await self._send(bot_message)
@@ -254,6 +265,12 @@ class MessageSender:
                     link_preview.to_send_dict() for link_preview in reply.link_previews
                 ]
 
+            # Add mentions to message.
+            if reply.mentions:
+                bot_message["mentions"] = [
+                    mention.to_send_dict() for mention in reply.mentions
+                ]
+
             # Add quote to message.
             if reply.quote:
                 quote = {"id": message.timestamp,
@@ -267,6 +284,7 @@ class MessageSender:
         else:
             bot_message["recipientAddress"] = {"uuid": message.source.uuid}
 
+        print(bot_message)
         return await self._send(bot_message)
 
     async def typing_started(self, message: Message) -> None:
@@ -412,6 +430,18 @@ class MessageSender:
             "version": "v1",
             "account": self._username,
         })
+
+    async def list_accounts(self) -> List:
+        """
+        List groups for an account.
+
+        :return: Returns a list of v2 group objects
+        """
+        return await self._send({
+            "type": "list_accounts",
+            "version": "v1"
+        })
+
 
     async def get_group(self, group_id: str) -> GroupV2:
         """
