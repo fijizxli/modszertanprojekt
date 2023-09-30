@@ -107,14 +107,20 @@ export function initRepoCommentForm() {
         if (hasUpdateAction) {
           // TODO: Add batch functionality and make this 1 network request.
           const itemEntries = Object.entries(items);
-          for (const [elementId, item] of itemEntries) {
+          /*for (const [elementId, item] of itemEntries) {
             await updateIssuesMeta(
               item['update-url'],
               item.action,
               item['issue-id'],
               elementId,
             );
-          }
+          }*/
+          await updateIssuesMeta(
+            $listMenu.data('update-url'),
+            null, //TODO currently ignored anyway, it's just a toggle trick?
+            $listMenu.data('issue-id'),
+            itemEntries.map(x => x[0]).toString()
+          );
           if (itemEntries.length) {
             reloadConfirmDraftComment();
           }

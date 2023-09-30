@@ -2216,7 +2216,22 @@ func UpdateIssueAssignee(ctx *context.Context) {
 		return
 	}
 
-	assigneeID := ctx.FormInt64("id")
+        // based on getActionIssues
+	commaSeparatedAssigneeIDs := ctx.FormString("id")
+	if len(commaSeparatedAssigneeIDs) == 0 {
+		return
+	}
+        assigneeIDs := make([]int64, 0, 10) //TODO whats this arbitrary limit?
+        for _, stringAssigneeID := range strings.Split(commaSeparatedAssigneeIDs, ",") {
+		assigneeID, err := strconv.ParseInt(stringAssigneeID, 10, 64)
+		if err != nil {
+			ctx.ServerError("ParseInt", err)
+			return
+		}
+		assigneeIDs = append(assigneeIDs, assigneeID)
+	}
+	assigneeEndIdx := len(assigneeIDs) - 1
+
 	action := ctx.FormString("action")
 
 	for _, issue := range issues {
@@ -2227,26 +2242,36 @@ func UpdateIssueAssignee(ctx *context.Context) {
 				return
 			}
 		default:
-			assignee, err := user_model.GetUserByID(ctx, assigneeID)
-			if err != nil {
-				ctx.ServerError("GetUserByID", err)
-				return
-			}
+			for i, assigneeID := range assigneeIDs {
+				assignee, err := user_model.GetUserByID(ctx, assigneeID)
+				if err != nil {
+					ctx.ServerError("GetUserByID", err)
+					return
+				}
 
-			valid, err := access_model.CanBeAssigned(ctx, assignee, issue.Repo, issue.IsPull)
-			if err != nil {
-				ctx.ServerError("canBeAssigned", err)
-				return
-			}
-			if !valid {
-				ctx.ServerError("canBeAssigned", repo_model.ErrUserDoesNotHaveAccessToRepo{UserID: assigneeID, RepoName: issue.Repo.Name})
-				return
-			}
+				valid, err := access_model.CanBeAssigned(ctx, assignee, issue.Repo, issue.IsPull)
+				if err != nil {
+					ctx.ServerError("canBeAssigned", err)
+					return
+				}
+				if !valid {
+					ctx.ServerError("canBeAssigned", repo_model.ErrUserDoesNotHaveAccessToRepo{UserID: assigneeID, RepoName: issue.Repo.Name})
+					return
+				}
 
-			_, _, err = issue_service.ToggleAssigneeWithNotify(ctx, issue, ctx.Doer, assigneeID)
-			if err != nil {
-				ctx.ServerError("ToggleAssignee", err)
-				return
+				//TODO so these operations aren't atomic, they just...can fail in the middle?
+				if i == assigneeEndIdx {
+					_, _, err = issue_service.ToggleAssigneeWithNotify(ctx, issue, ctx.Doer, assigneeID)
+					if err != nil {
+						ctx.ServerError("ToggleAssignee", err)
+						return
+					}
+				} else {
+					_, _, err = issues_model.ToggleIssueAssignee(ctx, issue, ctx.Doer, assigneeID)
+					if err != nil {
+						ctx.ServerError("ToggleAssignee", err)
+					}
+				}
 			}
 		}
 	}
