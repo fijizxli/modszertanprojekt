@@ -2218,9 +2218,11 @@ func UpdateIssueAssignee(ctx *context.Context) {
 
         // based on getActionIssues
 	commaSeparatedAssigneeIDs := ctx.FormString("id")
-	if len(commaSeparatedAssigneeIDs) == 0 {
+
+	/*if len(commaSeparatedAssigneeIDs) == 0 {
 		return
-	}
+	}*/
+
         assigneeIDs := make([]int64, 0, 10) //TODO whats this arbitrary limit?
         for _, stringAssigneeID := range strings.Split(commaSeparatedAssigneeIDs, ",") {
 		assigneeID, err := strconv.ParseInt(stringAssigneeID, 10, 64)
