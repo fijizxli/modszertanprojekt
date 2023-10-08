@@ -14,22 +14,90 @@
   project.name = "infra";
   services = {
     #TODO needs retry because it takes time for other services like postgres to (possibly) come back up
+
+    #TODO ...probably switch to forgejo
+    #  https://forgejo.org/faq/ "In October 2022 the domains and trademark of Gitea were transferred to a for-profit company without knowledge or approval of the community. Despite writing an open letter,
+    # the takeover was later confirmed. Forgejo was created as an alternative providing a software forge whose governance further the interest of the general public."
+
     gitea = {lib, ...}: {
       #image.enableRecommendedContents = true; # TODO what does this do?
       nixos.useSystemd = true; # Check wrt the podman book about systemd
-#      nixos.configuration.boot.tmpOnTmpfs = true; #TODO ?
-      nixos.configuration.boot.tmp.useTmpfs = true;
-      nixos.configuration.system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
-      nixos.configuration.services.gitea = {
-        enable = true;
-        database = {
-          createDatabase = false;
-          host = "postgres";
-          type = "postgres";
+      nixos.configuration = {config, ...}: {
+#        boot.tmpOnTmpfs = true; #TODO ?
+        boot.tmp.useTmpfs = true;
+        system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
+        system.stateVersion = "23.05";
+
+        systemd.services.gitea.path = [ pkgs.bashInteractive ]; # needed otherwise for some reason editing commits in the ui results in an error using /usr/bin/env not being able to find bash    #TODO
+        services.gitea = {
+          enable = true;
+          database = {
+            createDatabase = false;
+            host = "postgres";
+            type = "postgres";
+            };
+          settings = {
+            log.LEVEL = "Debug";
+            DEFAULT.WORK_PATH = "${config.services.gitea.stateDir}"; # https://github.com/NixOS/nixpkgs/commit/ed02e79bbe031a7ce9cf863660f10d3ef70b8636
+            server = {
+              ROOT_URL = "https://p.p2.kolmogorov.space:64743/"; #TODO oh geez ok how do I make this work here, case on dev/prod? :/ proxy in front?
+              HTTP_PORT = 64743;
+              PROTOCOL = "https";
+              CERT_FILE = "cert.pem";
+              KEY_FILE = "key.pem";
+              SSH_PORT = 64744;
+              #TODO dev mode, dunno if anything other than public is atually needed
+#              STATIC_ROOT_PATH = "${
+#                pkgs.linkFarm "gitea-static-files" {
+#                  "public" = "/home/nixos/source/vendored_gitea/gitea/public";
+#                  "options" = "/home/nixos/source/vendored_gitea/gitea/options";
+#                  "templates" = "/home/nixos/source/vendored_gitea/gitea/templates";
+#                  }
+#                }";
+              };
+            service = {
+              REQUIRE_SIGNIN_VIEW = true;
+              DISABLE_REGISTRATION = true;
+              SHOW_REGISTRATION_BUTTON = false;
+              DISABLE_HTTP_GIT = false; #TODO does this meen http protocol or only allow https?
+              };
+            webhook = {
+              ALLOWED_HOST_LIST = "loopback";
+              };
+            actions.ENABLED = true;
+            };
           };
+        systemd.services.gitea.serviceConfig.RestartSec = 5; #TODO
+
+        # #TODO infrec   #TODO uhh timing this
+        #  systemd.services.gitea-self-signed = let
+        #      domain = "p.p2.kolmogorov.space";
+        #    in lib.mkMerge [
+        #      (lib.traceValSeq config.systemd.services.gitea)
+        #      (lib.mkForce { 
+        #         after = [ "gitea.service" ]; #TODO wrong?
+        #         wantedBy = [ "gitea.service" ];
+        #         serviceConfig = { ExecStart = "${lib.getExe pkgs.gitea} cert --host ${domain}"; };
+        #         })
+        #      ];   
+
+        systemd.services.gitea-self-signed = let
+            domain = "p.p2.kolmogorov.space";
+          in {
+            after = [ "gitea.service" ]; #TODO wrong?
+            wantedBy = [ "gitea.service" ];
+            unitConfig = {
+              ConditionPathExists = [ "|!${config.services.gitea.customDir}/cert.pem" "|!${config.services.gitea.customDir}/key.pem" ];
+              };
+            serviceConfig = {
+              WorkingDirectory = config.services.gitea.customDir;
+              User = config.services.gitea.user;
+              Group = config.services.gitea.group;      
+              ExecStart = "${config.services.gitea.package}/bin/gitea cert --host ${domain}";
+              };
+            environment = lib.mkForce config.systemd.services.gitea.environment; #TODO why is there a conflict here??
+            };
         };
-      nixos.configuration.systemd.services.gitea.serviceConfig.RestartSec = 5; #TODO
-      nixos.configuration.system.stateVersion = "23.05";
       service = {
         useHostStore = true; # TODO requires a different variant of deployment?
         #ports = "4000:3000";
@@ -127,6 +195,28 @@
         security.wrappers.newgidmap.capabilities = "cap_setgid+eip";
         system.stateVersion = "23.05";
         boot.tmp.useTmpfs = true;
+
+
+        #TODO I need to temporarily patch permissions out on this or something because having to readdi it every time is not going to go well
+        services.gitea-actions-runner.instances.small = {
+          enable = true;
+          name = "small";
+          token = "fvVAjp8zz1EdaFSOYJAE0EMbEP2NmroGJ4LKbXna"; # TODO single use?
+          url = "https://p.p2.kolmogorov.space:64743";
+          labels = [ "ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04" ]; #TODO
+          };    
+        systemd.services.gitea-runner-small.serviceConfig.AllowedCPUs=1; #TODO test
+        #  systemd.services.gitea-runner-small.environment.CONTAINERS_REGISTRIES_CONF = pkgs.writeText "registries.conf" ''
+        #      unqualified-search-registries = ["localhost:5001"]
+        #      [[registry]]
+        #      prefix = "docker.io/library"
+        #      location = "localhost:5001"
+        #      insecure = true
+        #      '';
+
+        #  systemd.services.gitea-runner-small.serviceConfig.ExecStart = 
+        #    let
+        #    in lib.mkForce "${config.services.gitea-actions-runner.package}/bin/act_runner daemon -c ${runnerConfig}";
         };
       };
 
