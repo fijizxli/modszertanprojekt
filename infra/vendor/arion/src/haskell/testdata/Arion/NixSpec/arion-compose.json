@@ -1,0 +1,57 @@
+{
+    "networks": {
+        "default": {
+            "name": "unit-test-data"
+        }
+    },
+    "services": {
+        "webserver": {
+            "command": [
+                "/usr/sbin/init"
+            ],
+            "environment": {
+                "NIX_REMOTE": "",
+                "PATH": "/usr/bin:/run/current-system/sw/bin/",
+                "container": "docker"
+            },
+            "image": "localhost/webserver:<HASH>",
+            "ports": [
+                "8000:80"
+            ],
+            "stop_signal": "SIGRTMIN+3",
+            "sysctls": {},
+            "tmpfs": [
+                "/run",
+                "/run/wrappers",
+                "/tmp:exec,mode=777"
+            ],
+            "tty": true,
+            "volumes": [
+                "/sys/fs/cgroup:/sys/fs/cgroup:ro",
+                "/nix/store:/nix/store:ro"
+            ]
+        }
+    },
+    "version": "3.4",
+    "volumes": {},
+    "x-arion": {
+        "images": [
+            {
+                "imageExe": "<STOREPATH>",
+                "imageName": "localhost/webserver",
+                "imageTag": "<HASH>"
+            }
+        ],
+        "project": {
+            "name": "unit-test-data"
+        },
+        "serviceInfo": {
+            "webserver": {
+                "defaultExec": [
+                    "/run/current-system/sw/bin/bash",
+                    "-l"
+                ]
+            }
+        }
+    }
+}
