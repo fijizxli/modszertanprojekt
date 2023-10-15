@@ -1,0 +1,74 @@
+From d081c088aecdd583851c817021d388f23f5ef360 Mon Sep 17 00:00:00 2001
+From: name <email>
+Date: Wed, 11 Oct 2023 22:18:08 +0200
+Subject: [PATCH] Revert "dockerTools: use makeOverridable for buildImage
+ family of functions"
+
+This reverts commit 38c1400f67f6af73821d5be82f0ddab548e707e2.
+---
+ pkgs/build-support/docker/default.nix | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/pkgs/build-support/docker/default.nix b/pkgs/build-support/docker/default.nix
+index 1ac0a69f7451..9f57804e957d 100644
+--- a/pkgs/build-support/docker/default.nix
++++ b/pkgs/build-support/docker/default.nix
+@@ -487,7 +487,7 @@ rec {
+       '';
+     };
+
+-  buildLayeredImage = lib.makeOverridable ({ name, ... }@args:
++  buildLayeredImage = { name, ... }@args:
+     let
+       stream = streamLayeredImage args;
+     in
+@@ -496,8 +496,7 @@ rec {
+         inherit (stream) imageName;
+         passthru = { inherit (stream) imageTag; };
+         nativeBuildInputs = [ pigz ];
+-      } "${stream} | pigz -nTR > $out"
+-  );
++      } "${stream} | pigz -nTR > $out";
+
+   # 1. extract the base image
+   # 2. create the layer
+@@ -505,7 +504,7 @@ rec {
+   # 4. compute the layer id
+   # 5. put the layer in the image
+   # 6. repack the image
+-  buildImage = lib.makeOverridable (
++  buildImage =
+     args@{
+       # Image name.
+       name
+@@ -752,8 +751,7 @@ rec {
+       '';
+
+     in
+-    checked result
+-  );
++    checked result;
+
+   # Merge the tarballs of images built with buildImage into a single
+   # tarball that contains all images. Running `docker load` on the resulting
+@@ -839,7 +837,7 @@ rec {
+     })
+   );
+
+-  streamLayeredImage = lib.makeOverridable (
++  streamLayeredImage =
+     {
+       # Image Name
+       name
+@@ -1048,8 +1046,7 @@ rec {
+           makeWrapper ${streamScript} $out --add-flags ${conf}
+         '';
+       in
+-      result
+-  );
++      result;
+
+   # This function streams a docker image that behaves like a nix-shell for a derivation
+   streamNixShellImage =
+--
+2.40.1
