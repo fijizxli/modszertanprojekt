@@ -17,7 +17,14 @@
 {
   project.name = "infra";
   enableDefaultNetwork = true;
-  docker-compose.volumes = { runner-token-share = {}; }; #TODO?
+  docker-compose.volumes = {
+    #TODO can make ephemeral? used for requesting and passing actions runner token
+    runner-token-share = {};
+    testing-postgres = {};
+    testing-gitea = {};
+    testing-signalbot = {};
+
+    }; #TODO?
 #  docker-compose.network = {
 #    "${config.project.name}" = {
 #        internal = true;
@@ -33,18 +40,62 @@
     gitea = {lib, ...}: {
       service = {
         useHostStore = true; # TODO requires a different variant of deployment?
-        #ports = "4000:3000";
+        ports = [ "127.0.0.1:4000:64743" ];
         volumes = [ "runner-token-share:/run/gitea-token-share" ]; #TODO is there no simpler way to do this? We pass a fifo over a volume to notify the gitea container to generate us a urnner token and send it back over
         };
       #image.enableRecommendedContents = true; # TODO what does this do?
       nixos.useSystemd = true; # Check wrt the podman book about systemd
-      nixos.configuration = {config, ...}: {
+      nixos.configuration = {config, pkgs, ...}: {
 #        boot.tmpOnTmpfs = true; #TODO ?
         boot.tmp.useTmpfs = true;
         system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
         system.stateVersion = "23.05";
 
+        #systemd.services.gitea-register-first-admin.serviceConfig = {}; # TODO
+        #Add an admin user, set up the signal notification webhook
+        # TODO what does this mean? it seems to be wrong "Note: please keep in mind that this should be added after the initial deploy unless services.gitea.useWizard is true as the first registered user will be the administrator if no install wizard is used."
+        systemd.services.gitea-init-instance = { #TODO how to cause degraded if service fails?
+          after = [ "gitea.service" ];
+          wantedBy = [ "gitea.service" ];
+          unitConfig = {
+            ConditionPathExists = [ "!/var/lib/gitea/gitea-inited-flag" ];
+            };
+          environment = lib.mkForce config.systemd.services.gitea.environment; #TODO why is there a conflict here??
+          serviceConfig = {
+            User = config.services.gitea.user;
+            Group = config.services.gitea.group;      
+            ExecStart = pkgs.writeShellScript "gitea-init" ''
+              set -x
+              #TODO race condition here probably, db not created yet?
+              # Command error: CreateUser: pq: relation "user" does not exist
+              sleep 15
+              if [[ ! -f /var/lib/gitea/gitea-has-admin ]]; then
+                # Add admin user since we have registration off #TODO
+                token=$(
+                  ${config.services.gitea.package}/bin/gitea admin user create --username testadmin --password testadmin --access-token --email fake@fake.fake --admin --must-change-password=false |
+                    ${pkgs.gawk}/bin/awk 'match($0, /Access token was successfully created... (.*)/, a) { print a[1] } END { if(!a[1]) { exit(1) } };'
+                  )
+                [ "x$token" == x ] && exit 1
+                touch /var/lib/gitea/gitea-has-admin
+              fi
+              if [[ -f /var/lib/gitea/gitea-has-webhook ]]; then
+                # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
+                read responseCode < <(curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: token $(token)" \
+                  -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:5000/v1/msg", "http_method":"get"}}' |
+                    tail -n 1)
+                [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
+                touch /var/lib/gitea/gitea-has-webhook
+              fi
+              touch /var/lib/gitea/gitea-inited-flag
+              '';
+            }; # TODO
+          };
+        #TODO runner test repo
+
         systemd.services.gitea.path = [ pkgs.bashInteractive ]; # needed otherwise for some reason editing commits in the ui results in an error using /usr/bin/env not being able to find bash    #TODO
+        #TODO GITEA_WORK_DIR=/var/lib/gitea /nix/store/2qjl3pba6hnd58z9c57kx2j4icmyrpdw-gitea-1.20.5/bin/gitea admin user create --username testadmin --password testadmin  --email fake@fake.fake
         services.gitea = {
           enable = true;
           database = {
