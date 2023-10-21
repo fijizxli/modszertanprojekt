@@ -90,6 +90,8 @@ def handle_webhook(q=notification_q): #TODO is this correct?
         return r
       return g
 
+    #meg nincs issue_label event_type, (actions: "label_updated", "label_cleared") mert ugy mukodik, mint az assign
+
     @magic_match("create")
     def on_create():
       return f"""{sender.username} created a new {ref_type} for the repository {repository.name}."""
@@ -114,11 +116,31 @@ def handle_webhook(q=notification_q): #TODO is this correct?
       else:
         return _ns
 
+    @magic_match("issue_assign")
+    def on_issue_assign():
+      # nem lesz unassigned mert nincs benne a jsonben hogy kivel tortent az esemeny
+      if (action == "assigned"):
+        x = ", ".join(i.username for i in issue.assignees)
+        return dedent(f"""
+          {x} got assigned issue #{issue.number}: "{issue.title}". ({issue.url})
+          """).strip()
+      else:
+        return str(_ns)
+
     @magic_match("issue_comment")
     def on_issue_comment():
-      if action in ("created",):
+      if action in ("created", "edited", "deleted"):
         return dedent(f"""
-          Comment added to: issue #{issue.number} ({issue.title}): {comment.body} by {comment.user.username}
+          Issue comment {action} on issue #{issue.number} ({issue.title}): "{comment.body}" by {comment.user.username}
+          """).strip()
+      else:
+        return _ns
+
+    @magic_match("issue_label")
+    def on_issue_label():
+      if action in ("label_updated", "label_cleared"):
+        return dedent(f"""
+          Label added to issue.
           """).strip()
       else:
         return _ns
@@ -139,7 +161,6 @@ def handle_webhook(q=notification_q): #TODO is this correct?
     @magic_match("pull_request_review_comment")
     def on_pull_request_review_comment():
       return f"""{pull_request.title} {action} by {sender.username}: {review.content}"""
-
 
     @magic_match("repository")
     def on_repo():
