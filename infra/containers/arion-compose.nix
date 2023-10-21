@@ -78,7 +78,7 @@
                 [ "x$token" == x ] && exit 1
                 touch /var/lib/gitea/gitea-has-admin
               fi
-              if [[ -f /var/lib/gitea/gitea-has-webhook ]]; then
+              if [[ -f /var/lib/gitea/gitea-has-bot-webhook ]]; then
                 # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
                 read responseCode < <(curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
                   -H "Content-Type: application/json" \
@@ -86,7 +86,17 @@
                   -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:5000/v1/msg", "http_method":"get"}}' |
                     tail -n 1)
                 [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
-                touch /var/lib/gitea/gitea-has-webhook
+                touch /var/lib/gitea/gitea-has-bot-webhook
+              fi
+              if [[ -f /var/lib/gitea/gitea-has-shell2-webhook ]]; then
+                # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
+                read responseCode < <(curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: token $(token)" \
+                  -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:55555/v1/msg?payload=", "http_method":"get"}}' |
+                    tail -n 1)
+                [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
+                touch /var/lib/gitea/gitea-has-shell2-webhook
               fi
               touch /var/lib/gitea/gitea-inited-flag
               '';
@@ -444,6 +454,10 @@
       service = {
         useHostStore = true; # TODO requires a different variant of deployment?
         #ports = [ "3306:3306" ];
+        capabilities = {
+          SYS_ADMIN = true; #TODO ; for dynamicuser
+          };
+        volumes = [ "testing-signalbot:/var/lib/signald" ];
         };
       nixos.useSystemd = true;
 #      nixos.configuration.boot.tmpOnTmpfs = true; #TODO ?
@@ -454,7 +468,9 @@
 
         services.signald.enable = true;
         # TODO services.signald.user = "nixos";
-
+        # fix(ish?) logging for debug
+        systemd.services.signald.serviceConfig.BindReadOnlyPaths = ["/run/systemd/journal/socket"];
+        systemd.services.signald.serviceConfig.ProtectProc = lib.mkForce "default"; #TODO this is a workaround for when systemd inside the container is starting the service, hidepid somehow breaks things; probably because when run outside a container systemd is running as real root, but inside its not(?) and isnt able to bypass hidpide as fake-root? (so the "(sd-userns)" code doesnt work - search the source)
         systemd.services.signal-message-hook = let
           prochook = pkgs.writeShellScript "prochook.sh" ''
             echo "$@"
