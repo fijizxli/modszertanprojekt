@@ -1826,7 +1826,7 @@ class PodmanCompose:
             help="pod creation",
             metavar="in_pod",
             type=bool,
-            default=True,
+            default=False,
         )
         parser.add_argument(
             "--pod-args",
