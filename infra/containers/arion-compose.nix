@@ -1,4 +1,33 @@
+#TODO vpn host?
 #TODO pinning
+#TODO ...probably switch to forgejo, but it seems to be behind upstream
+#  https://forgejo.org/faq/ "In October 2022 the domains and trademark of Gitea were transferred to a for-profit company without knowledge or approval of the community.
+# Despite writing an open letter,
+# the takeover was later confirmed. Forgejo was created as an alternative providing a software forge whose governance further the interest of the general public."
+
+#TODO init container and zfs recv datasets + assert noupstream?
+
+#TODO gitea dev mode
+  #systemd.services.gitea.serviceConfig.ExecStart = lib.mkForce "${/home/nixos/gitea/gitea} web --pid /run/gitea/gitea.pid";
+  #TODO for frontend dev mode
+#systemd.services.gitea.serviceConfig.ProtectSystem = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectHome = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.PrivateTmp = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.PrivateDevices = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.PrivateUsers = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectHostname = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectClock = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectKernelTunables = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectKernelModules = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectKernelLogs = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.ProtectControlGroups = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.RestrictAddressFamilies = lib.mkForce  [ "AF_UNIX AF_INET AF_INET6" ];
+#systemd.services.gitea.serviceConfig.LockPersonality = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.MemoryDenyWriteExecute = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.RestrictRealtime = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.RestrictSUIDSGID = lib.mkForce  false;
+#systemd.services.gitea.serviceConfig.PrivateMounts = lib.mkForce  false;
+
 
 #TODO arion doesnt seem to add gc roots so I need to deal with that or export the containers to a registry?
 #TODO NOTE in order to run the nested container CI containers, the outer container host needs enough namespace maping to fit what the inner container wants (TODO probably need some kind of impure solution to this to make it more automatic? mostbuilds dontneed many users so ivide the space
@@ -384,6 +413,7 @@
         };
       };
 
+    #TODO disable
     #TODO this isnt really necessary
     wormhole = {lib, ...}: {
       service = {
@@ -465,6 +495,8 @@
         system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
         boot.tmp.useTmpfs = true;
         system.stateVersion = "23.05";
+
+        #environ.systemPacages = [ signaldctl signal-cli signal-desktop, & x forwarding out of container or somethign ];
 
         services.signald.enable = true;
         # TODO services.signald.user = "nixos";
