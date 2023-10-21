@@ -1,0 +1,312 @@
+= Welcome to Arion documentation
+
+== Introduction
+
+Arion is a tool for building and running applications that
+consist of multiple docker containers using NixOS modules.
+It has special support for docker images that are built with Nix,
+for a smooth development experience and improved performance.
+
+It is built on top of https://docs.docker.com/compose/overview/[Docker
+Compose], which implements the container orchestration functionality.
+
+Instead of configuring the compositions in YAML files like
+`docker-compose.yaml`, Arion uses the https://nixos.org/nix/[Nix]
+language to declare the compositions. Because of this, Arion gives you
+the ability to declare your deployments, configuration and packaging
+in the same language. By replacing multiple tools with a single
+language, you decrease your mental load and you can more easily
+refactor and maintain your configurations.
+
+Although Arion can be used as a Docker Compose with an improved
+configuration front end, there is more to be gained from integrating
+with Nix. In particular, the more structured approach of Nix compared
+to Dockerfiles allows the following:
+
+ * Build components of your image in *parallel, automatically*
+ * *Share packages between images*, regardless of the order they were
+   added
+ * Improve performance by *skipping container
+   image creation*
+ * Work with *structured data instead of strings*,
+   templates and a multitude of expression languages
+ * Refactor across deployments, configuration and packaging
+
+Arion allows to compose containers with different granularity:
+
+  * <<Minimal: Plain command using nixpkgs>>
+  * <<NixOS: run only one systemd service>>
+  * <<NixOS: run full OS>>
+  * <<Docker image from DockerHub>>
+
+Full NixOS is supported on
+
+ * docker-compose + podman with docker socket (NixOS >= 21.05)
+ * docker-compose + docker, before cgroupsv2 (NixOS < 21.05)
+
+`podman-compose` support is currently WIP on a separate branch.
+
+== Installation
+
+=== Nix
+
+```bash
+$ nix-env -iA arion -f https://github.com/hercules-ci/arion/tarball/master
+```
+
+=== NixOS
+
+Add this module to your NixOS configuration:
+
+```nix
+{ pkgs, ... }: {
+  environment.systemPackages = [
+    pkgs.arion
+
+     # Do install the docker CLI to talk to podman.
+     # Not needed when virtualisation.docker.enable = true;
+    pkgs.docker-client
+  ];
+
+  # Arion works with Docker, but for NixOS-based containers, you need Podman
+  # since NixOS 21.05.
+  virtualisation.docker.enable = false;
+  virtualisation.podman.enable = true;
+  virtualisation.podman.dockerSocket.enable = true;
+  virtualisation.podman.defaultNetwork.dnsname.enable = true;
+
+  # Use your username instead of `myuser`
+  users.extraUsers.myuser.extraGroups = ["podman"];
+}
+```
+
+////
+
+== Not installing: use it in a project
+
+TODO: describe: using nix-shell or in a script, building images as
+      part of nix-build, pinning, see also todomvc-nix.
+
+TODO: exposed Nix functions: arion.build, arion.eval (a bit of IFD)
+
+
+////
+
+
+== Usage
+
+Arion is configured declaratively with two files:
+
+=== arion-pkgs.nix
+
+Arion needs `arion-pkgs.nix` to import nixpkgs, for example:
+
+```nix
+import <nixpkgs> { system = "x86_64-linux"; }
+```
+
+or more sophisticated (recommended) setup with https://github.com/nmattia/niv[Niv].
+
+=== arion-compose.nix
+
+Describe containers using NixOS-style modules. There are a few options:
+
+==== Minimal: Plain command using nixpkgs
+
+`examples/minimal/arion-compose.nix`
+[,nix]
+----
+{ pkgs, ... }:
+{
+  project.name = "webapp";
+  services = {
+
+    webserver = {
+      image.enableRecommendedContents = true;
+      service.useHostStore = true;
+      service.command = [ "sh" "-c" ''
+                  cd "$$WEB_ROOT"
+                  ${pkgs.python3}/bin/python -m http.server
+                '' ];
+      service.ports = [
+        "8000:8000" # host:container
+      ];
+      service.environment.WEB_ROOT = "${pkgs.nix.doc}/share/doc/nix/manual";
+      service.stop_signal = "SIGINT";
+    };
+  };
+}
+----
+
+==== NixOS: run full OS
+
+`examples/full-nixos/arion-compose.nix`:
+
+[,nix]
+----
+{
+  project.name = "full-nixos";
+  services.webserver = { pkgs, lib, ... }: {
+    nixos.useSystemd = true;
+    nixos.configuration.boot.tmpOnTmpfs = true;
+    nixos.configuration.services.nginx.enable = true;
+    nixos.configuration.services.nginx.virtualHosts.localhost.root = "${pkgs.nix.doc}/share/doc/nix/manual";
+    nixos.configuration.services.nscd.enable = false;
+    nixos.configuration.system.nssModules = lib.mkForce [];
+    nixos.configuration.systemd.services.nginx.serviceConfig.AmbientCapabilities = 
+      lib.mkForce [ "CAP_NET_BIND_SERVICE" ];
+    service.useHostStore = true;
+    service.ports = [
+      "8000:80" # host:container
+    ];
+  };
+}
+----
+
+==== Docker image from DockerHub
+
+```nix
+{
+  services.postgres = {
+    service.image = "postgres:10";
+    service.volumes = [ "${toString ./.}/postgres-data:/var/lib/postgresql/data" ];
+    service.environment.POSTGRES_PASSWORD = "mydefaultpass";
+  };
+}
+```
+
+==== NixOS: run only one systemd service
+
+Running individual units from NixOS is possible using an experimental script.
+See `examples/nixos-unit/arion-compose.nix`.
+
+=== Run
+
+Start containers and watch their logs:
+
+```bash
+$ arion up -d
+$ arion logs -f
+```
+
+You can go to `examples/*/` and run these commands to give it a quick try.
+
+=== Inspect the config
+
+While developing an arion project, you can make use of `arion repl`, which launches
+a `nix repl` on the project configuration.
+
+```
+$ arion repl
+Launching a repl for you. To get started:
+
+To see deployment-wide configuration
+  type config. and use tab completion
+To bring the top-level Nixpkgs attributes into scope
+  type :a (config._module.args.pkgs) // { inherit config; }
+
+Welcome to Nix. Type :? for help.
+
+Loading '../../src/nix/eval-composition.nix'...
+Added 5 variables.
+
+nix-repl> config.services.webserver.service.command
+[ "sh" "-c" "cd \"$$WEB_ROOT\"\n/nix/store/66fbv9mmx1j4hrn9y06kcp73c3yb196r-python3-3.8.9/bin/python -m http.server\n" ]
+
+nix-repl>
+
+```
+
+== Build with Nix
+
+You can build a project with `nix-build` using an expression like
+
+```nix
+arion.build { modules = [ ./arion-compose.nix ]; pkgs = import ./arion-pkgs.nix; }
+```
+
+If you deploy with xref:hercules-ci-effects:ROOT:reference/nix-functions/runArion.adoc[runArion],
+and your `pkgs` variable is equivalent to `import ./arion-pkgs.nix`, you can use:
+
+```nix
+let
+  deployment = pkgs.effects.runArion { /* ... */ });
+in deployment.prebuilt
+```
+
+== Project Status
+
+This project was born out of a process supervision need for local
+development environments while working on
+https://www.hercules-ci.com[Hercules CI]. (It was also born out of
+ancient Greek deities disguised as horses. More on that later.)
+
+Arion can be used for simple single host deployments, using Docker's TLS
+client verification, or https://search.nixos.org/options?channel=unstable&show=virtualisation.podman.networkSocket.enable&query=virtualisation.podman[`virtualisation.podman.networkSocket` options].
+Remote deployments do not support `useHostStore`, although an SSH-based deployment method could support this.
+Docker Swarm is not currently supported.
+
+Arion has run successfully on Linux distributions other than NixOS, but we only perform CI for Arion on NixOS.
+
+
+== How it works
+
+Arion is essentially a thin wrapper around Nix and docker-compose. When
+it runs, it does the following:
+
+* Evaluate the configuration using Nix, producing a
+`docker-compose.yaml` and a garbage collection root
+* Invoke `docker-compose`
+* Clean up the garbage collection root
+
+Most of the interesting stuff happens in Arion’s Nix expressions, where
+it runs the module system (known from NixOS) and provides the
+configuration that makes the Docker Compose file do the things it needs
+to do.
+
+One of the more interesting built-in modules is the
+https://github.com/hercules-ci/arion/blob/master/src/nix/modules/service/host-store.nix[host-store.nix module] which
+performs the bind mounts to make the host Nix store available in the
+container.
+
+== FAQ
+
+=== Do I need to use Hercules CI?
+
+Nope, it’s just Nix and Docker Compose under the hood.
+
+It does xref:hercules-ci-effects:ROOT:reference/nix-functions/runArion.adoc[integrate] nicely though.
+
+=== What about garbage collection?
+
+Arion removes the need for garbage collecting docker images, delegating
+this task to Nix when using `service.useHostStore`.
+
+Arion creates a garbage collection root that it cleans up after completing
+the command. This means that `arion up -d` should not be used with `useHostStore`
+in production. Instead, disable `useHostStore`, which will use `dockerTools` to
+generate images that can be used in production.
+
+=== Why is my container not running latest code?
+
+Rebuild the image using `arion up -d --always-recreate-deps <name>` or simply `arion up -d`.
+
+Like `docker-compose restart`, `arion restart` does not update the image before starting.
+
+=== What is messing with my environment variables?
+
+Docker Compose performs its own environment variable substitution. This
+can be a little annoying in `services.command` for example. Either
+reference a script from `pkgs.writeScript` or escape the dollar sign as
+`$$`.
+
+=== Why name it ``Arion``?
+
+Arion comes from Greek mythology. Poseidon, the god of Docker -- I mean the seas --
+had his eye on Demeter. Demeter tried to trick him by disguising as a
+horse, but Poseidon saw through the deception and they had Arion.
+
+So Arion is a super fast divine horse; the result of some weird mixing.
+Also it talks.
+
+(And we felt morally obliged to name our stuff after Greek mythology)

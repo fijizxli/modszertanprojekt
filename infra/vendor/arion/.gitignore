@@ -1,0 +1,9 @@
+result
+result-*
+
+dist/
+dist-newstyle/
+cabal.project.local
+
+*.swp
+
