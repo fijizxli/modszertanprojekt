@@ -44,6 +44,8 @@ let
     signal-cli = unstable.signal-cli;
     signaldctl = unstable.signaldctl;
 
+    signalBot = import ../signalbot {pkgs= self;}; #TODO fix up pinning and pinning propagation
+
     gitea = unstable.gitea.overrideAttrs (o: {
       #src = lib.cleanSource /home/nixos/gitea;
       postPatch = o.postPatch + ''

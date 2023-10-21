@@ -1,5 +1,7 @@
+{
+pkgs ? import (import ./nix/sources.nix {}).nixpkgs {}
+}:
 let
- pkgs = import (import ./nix/sources.nix {}).nixpkgs {};
  env = pkgs.poetry2nix.mkPoetryEnv {
     projectDir = ./.;
     overrides = pkgs.poetry2nix.defaultPoetryOverrides.extend

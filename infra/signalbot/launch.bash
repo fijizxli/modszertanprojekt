@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+SIGNAL_NOTIF_GROUP="l4BGXE5AOs0S9UZOCcMTw3e2b3z8o/Nqy0aEvCM2vII="  SIGNAL_ACCT=+37258976290 python bot.py

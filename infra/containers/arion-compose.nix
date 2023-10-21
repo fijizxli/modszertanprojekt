@@ -448,7 +448,7 @@
               DynamicUser = true;
                  ExecStart = "${python}/bin/twistd --nodaemon wormhole-mailbox --port=tcp:64739";
                  WorkingDirectory = dataDir;
-                 StateDirectory = baseNameOf dataDir;
+                 StateDirectory = baseNameOf dataDir; #TODO probably wrong?
               };
             };
 
@@ -507,7 +507,7 @@
           prochook = pkgs.writeShellScript "prochook.sh" ''
             echo "$@"
             '';
-          dataDir = "/var/lib/signal-message-hook;";
+          dataDir = "/var/lib/signal-message-hook";
           #actual gid = "3Ho2kTe4WlVFcjWSAJ7+Mu9rqZbNrj8YBf09YESsVzs=";
           #test
           gid = "l4BGXE5AOs0S9UZOCcMTw3e2b3z8o/Nqy0aEvCM2vII=";
@@ -524,6 +524,27 @@
                 '';
               WorkingDirectory = dataDir;
               StateDirectory = baseNameOf dataDir;
+            };
+          };
+
+        systemd.services.signal-message-bot = {
+            after = [ "signald.service" ];
+            wantedBy = [ "signald.service" ];
+            path = [ pkgs.signalBot ]; # TODO is there a point to this if exec needs an abspath anyway?
+            environment = {
+              SIGNAL_NOTIF_GROUP= "l4BGXE5AOs0S9UZOCcMTw3e2b3z8o/Nqy0aEvCM2vII=";
+              SIGNAL_ACCT = "+37258976290";
+              };
+            serviceConfig = {
+              RestartSec = 5; #TODO proper retry logic
+              #User = config.services.signald.user;
+              #TODO proper
+              ExecStart = ''
+                ${pkgs.signalBot}/bin/python ${../signalbot/bot.py}
+                '';
+              User = config.services.signald.user;
+              WorkingDirectory = "/var/lib/signalBot";
+              StateDirectory = "signalBot";
             };
           };
 
