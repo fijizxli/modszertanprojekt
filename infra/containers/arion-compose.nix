@@ -39,6 +39,8 @@
 
 #TODO split prod and test volumes or zfs checkpoint them or something
 
+#TODO dunno why this pr wasnt merged or fixed, dhcp shouldnt be running in container; https://github.com/hercules-ci/arion/pull/199
+
 
 #TODO I always forget that docker and podman always make forwarded ports publicly visible because of the way they bypass the firewall, need a more secure solution for this.
 #TODO figure out how dns name resolution is set up https://stackoverflow.com/questions/31149501/how-to-reach-docker-containers-by-name-instead-of-ip-address
@@ -70,7 +72,10 @@
       service = {
         useHostStore = true; # TODO requires a different variant of deployment?
         ports = [ "127.0.0.1:4000:64743" ];
-        volumes = [ "runner-token-share:/run/gitea-token-share" ]; #TODO is there no simpler way to do this? We pass a fifo over a volume to notify the gitea container to generate us a urnner token and send it back over
+        volumes = [
+          "runner-token-share:/run/gitea-token-share"
+           "testing-gitea:/var/lib/gitea"
+          ]; #TODO is there no simpler way to do this? We pass a fifo over a volume to notify the gitea container to generate us a urnner token and send it back over
         };
       #image.enableRecommendedContents = true; # TODO what does this do?
       nixos.useSystemd = true; # Check wrt the podman book about systemd
@@ -79,6 +84,8 @@
         boot.tmp.useTmpfs = true;
         system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
         system.stateVersion = "23.05";
+
+        networking.useDHCP = false; #see comment about dhcp above
 
         #systemd.services.gitea-register-first-admin.serviceConfig = {}; # TODO
         #Add an admin user, set up the signal notification webhook
@@ -93,6 +100,7 @@
           serviceConfig = {
             User = config.services.gitea.user;
             Group = config.services.gitea.group;      
+            #TODO use some kind of convergent configuration management for this?
             ExecStart = pkgs.writeShellScript "gitea-init" ''
               set -x
               #TODO race condition here probably, db not created yet?
@@ -260,8 +268,10 @@
       service = {
         useHostStore = true; # TODO requires a different variant of deployment?
         #ports = [ "3306:3306" ];
+        volumes = [ "testing-postgres:/var/lib/postgresql" ];
         };
       nixos.useSystemd = true;
+      nixos.configuration.networking.useDHCP = false; #see comment about dhcp above
       nixos.configuration.boot.tmp.useTmpfs = true;
 #      nixos.configuration.boot.tmpOnTmpfs = true; #TODO ?
       nixos.configuration.system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
@@ -331,6 +341,8 @@
 
 #        boot.tmpOnTmpfs = true; #TODO ?
         system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
+        networking.useDHCP = false; #see comment about dhcp above
+
         virtualisation.podman.enable = true;
         virtualisation.podman.dockerCompat = true;
         environment.variables = { DOCKER_HOST = "unix:///run/user/$UID/podman/podman.sock"; }; #TODO should I forward the outside socket instead, instead of nesting?
@@ -423,6 +435,7 @@
         useSystemd = true;
         configuration = {pkgs, ...}: {
           system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
+         networking.useDHCP = false; #see comment about dhcp above
           boot.tmp.useTmpfs = true;
           system.stateVersion = "23.05";
 
@@ -493,6 +506,7 @@
 #      nixos.configuration.boot.tmpOnTmpfs = true; #TODO ?
       nixos.configuration = {pkgs, config, ...}: {
         system.nssModules = lib.mkForce []; # From the arion docs example, is this needed?
+        networking.useDHCP = false; #see comment about dhcp above
         boot.tmp.useTmpfs = true;
         system.stateVersion = "23.05";
 
@@ -552,5 +566,6 @@
       };
   };
 }
+
 
 

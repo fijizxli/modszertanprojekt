@@ -46,14 +46,14 @@ let
 
     signalBot = import ../signalbot {pkgs= self;}; #TODO fix up pinning and pinning propagation
 
-    gitea = self.runCommand "gitea" { buildInputs = [ self.makeWrapper ]; } ''
+    gitea = (self.runCommand "gitea" { buildInputs = [ self.makeWrapper ]; } ''
       mkdir -p $out/{bin,data}
 
       cp -R ${self.gitea-backend.data}/{templates,options} ${self.gitea-frontend}/public $out/data
 
       makeWrapper ${self.gitea-backend}/bin/gitea $out/bin/gitea \
         --add-flags "--work-path $out/data"
-      '';
+      '') // { data = self.gitea + "/data"; };
     #TODO slightly cannibalized from upstream nixpkgs forjego whatever its called
 #    gitea-frontend = self.callPackage ../vendor/gitea/default.nix {};
 #TODO upstream: found this, why wasnt it portd to gitea https://github.com/emilylange/nixpkgs/blob/254180d5089523bfe9011b510df13981b263296e/pkgs/applications/version-management/forgejo/default.nix
@@ -113,7 +113,7 @@ let
         #src = self.lib.cleanSource ../vendor/gitea;
         src = self.lib.cleanSourceWith { filter = (path: _: builtins.match ".*/web_src*/.*" path == null); src = self.lib.cleanSource ../vendor/gitea; };
         });  
-      }); 
+      });
 #    .overrideAttrs (o: {
 #      postPatch = o.postPatch + ''
 #        cp -r ${/home/nixos/source/vendored_gitea/gitea/vendor/github.com/tidwall} vendor/github.com/tidwall
