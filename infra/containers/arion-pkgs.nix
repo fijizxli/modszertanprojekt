@@ -56,14 +56,51 @@ let
       '';
     #TODO slightly cannibalized from upstream nixpkgs forjego whatever its called
 #    gitea-frontend = self.callPackage ../vendor/gitea/default.nix {};
-    gitea-frontend = self.callPackage ../../../gitea/default.nix {};
+#TODO upstream: found this, why wasnt it portd to gitea https://github.com/emilylange/nixpkgs/blob/254180d5089523bfe9011b510df13981b263296e/pkgs/applications/version-management/forgejo/default.nix
+    gitea-frontend = self.buildNpmPackage {
+      pname = "gitea-frontend";
+      version = "v1.20.5-patched";
+
+      src = self.lib.cleanSource ../vendor/gitea;
+
+      # via prefetch-npm-deps
+      npmDepsHash = "sha256-YZzVw+WWqTmJafqnZ5vrzb7P6V4DTMNQwW1/+wvZEM8=";
+
+      # gitea uses npx webpack to build
+      patches = [
+        #(self.path + "/pkgs/applications/version-management/forgejo/package-json-npm-build-frontend.patch")
+        (self.writeText "patch-build-script" ''
+          diff --git a/package.json b/package.json
+          index 57dcfc2f7..c9f23dbf7 100644
+          --- a/package.json
+          +++ b/package.json
+          @@ -79,5 +79,8 @@
+               "defaults",
+               "not ie > 0",
+               "not ie_mob > 0"
+          -  ]
+          +  ],
+          +  "scripts": {
+          +    "build": "node_modules/.bin/webpack"
+          +  }
+           }
+          '')
+        ];
+
+      # override npmInstallHook
+      installPhase = ''
+        mkdir $out
+        cp -R ./public $out/
+        '';
+      };
+
     # TODO overriding go packages is insane
     gitea-backend = (unstable.callPackage "${unstable.path}/pkgs/applications/version-management/gitea" {
       buildGoModule = args: unstable.buildGoModule (args // {
         patches = []; # remove the static work path patch so that we can use env var in merger package
         postPatch = ""; #TODO wtf?
         #TODO since we are using a vanilla repo not an upstream tar dist, we dont have a vendor dir so we need to FOD        
-        vendorHash = "sha256-wsP0svEYc7+IFjsZJGo8J/LxdqZpc34dsahgN6CgJck=";
+        vendorHash = "sha256-Q9tESPXN5GOsosSJARoNZY9lfaW1X/RMhNp7DWaO4Hw="; #self.lib.fakeHash; #"sha256-wsP0svEYc7+IFjsZJGo8J/LxdqZpc34dsahgN6CgJck=";
         postInstall = ''
           mkdir $data
           cp -R ./{templates,options} $data
@@ -74,7 +111,7 @@ let
             --prefix PATH : ${self.lib.makeBinPath (with self; [ bash git gzip openssh ])}
           '';
         #src = self.lib.cleanSource ../vendor/gitea;
-        src = self.lib.cleanSourceWith { filter = (path: _: builtins.match ".*/web_src*/.*" path == null); src = self.lib.cleanSource ../../../gitea; };
+        src = self.lib.cleanSourceWith { filter = (path: _: builtins.match ".*/web_src*/.*" path == null); src = self.lib.cleanSource ../vendor/gitea; };
         });  
       }); 
 #    .overrideAttrs (o: {
