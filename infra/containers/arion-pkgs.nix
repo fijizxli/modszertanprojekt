@@ -46,19 +46,49 @@ let
 
     signalBot = import ../signalbot {pkgs= self;}; #TODO fix up pinning and pinning propagation
 
-    gitea = unstable.gitea.overrideAttrs (o: {
-      #src = lib.cleanSource /home/nixos/gitea;
-      postPatch = o.postPatch + ''
-        cp -r ${/home/nixos/source/vendored_gitea/gitea/vendor/github.com/tidwall} vendor/github.com/tidwall
-        '';
-      patches = [
-        /home/nixos/source/vendored_gitea/snd/0001-Patch-Gitea-webhook-JSON-to-store-the-webhook-event-.patch 
-        /home/nixos/source/vendored_gitea/snd/0002-force-modules.txt.patch
-        #TODO wrong patch?
-        #/home/nixos/source/vendored_gitea/snd/0003-only-send-webhook-notifications-for-the-last-assigne.patch
-        /home/nixos/source/vendored_gitea/snd/0004-Make-assignee-changes-in-the-issue-sidebar-send-requ.patch
-        /home/nixos/source/vendored_gitea/snd/0005-fix-clear-assignees-button-not-working-because-of-un.patch
-        ];
+    gitea = self.runCommand "gitea" { buildInputs = [ self.makeWrapper ]; } ''
+      mkdir -p $out/{bin,data}
+
+      cp -R ${self.gitea-backend.data}/{templates,options} ${self.gitea-frontend}/public $out/data
+
+      makeWrapper ${self.gitea-backend}/bin/gitea $out/bin/gitea \
+        --add-flags "--work-path $out/data"
+      '';
+    #TODO slightly cannibalized from upstream nixpkgs forjego whatever its called
+#    gitea-frontend = self.callPackage ../vendor/gitea/default.nix {};
+    gitea-frontend = self.callPackage ../../../gitea/default.nix {};
+    # TODO overriding go packages is insane
+    gitea-backend = (unstable.callPackage "${unstable.path}/pkgs/applications/version-management/gitea" {
+      buildGoModule = args: unstable.buildGoModule (args // {
+        patches = []; # remove the static work path patch so that we can use env var in merger package
+        postPatch = ""; #TODO wtf?
+        #TODO since we are using a vanilla repo not an upstream tar dist, we dont have a vendor dir so we need to FOD        
+        vendorHash = "sha256-wsP0svEYc7+IFjsZJGo8J/LxdqZpc34dsahgN6CgJck=";
+        postInstall = ''
+          mkdir $data
+          cp -R ./{templates,options} $data
+          mkdir -p $out
+          cp -R ./options/locale $out/locale
+
+          wrapProgram $out/bin/gitea \
+            --prefix PATH : ${self.lib.makeBinPath (with self; [ bash git gzip openssh ])}
+          '';
+        #src = self.lib.cleanSource ../vendor/gitea;
+        src = self.lib.cleanSourceWith { filter = (path: _: builtins.match ".*/web_src*/.*" path == null); src = self.lib.cleanSource ../../../gitea; };
+        });  
+      }); 
+#    .overrideAttrs (o: {
+#      postPatch = o.postPatch + ''
+#        cp -r ${/home/nixos/source/vendored_gitea/gitea/vendor/github.com/tidwall} vendor/github.com/tidwall
+#        '';
+#      patches = [
+#        /home/nixos/source/vendored_gitea/snd/0001-Patch-Gitea-webhook-JSON-to-store-the-webhook-event-.patch 
+#        /home/nixos/source/vendored_gitea/snd/0002-force-modules.txt.patch
+#        #TODO wrong patch?
+#        #/home/nixos/source/vendored_gitea/snd/0003-only-send-webhook-notifications-for-the-last-assigne.patch
+#        /home/nixos/source/vendored_gitea/snd/0004-Make-assignee-changes-in-the-issue-sidebar-send-requ.patch
+#        /home/nixos/source/vendored_gitea/snd/0005-fix-clear-assignees-button-not-working-because-of-un.patch
+#        ];
         #substituteInPlace modules/setting/server.go --subst-var data
         #Dont need this to patch $data, use static_root_path
         #data=/etc/giteafrontend
@@ -76,7 +106,7 @@ let
       #  wrapProgram $out/bin/gitea \
       #    --prefix PATH : ${lib.makeBinPath (with pkgs; [ bash coreutils git gzip openssh ])}
       # '';
-      });
+#      });
 
 #TODO not needed on unstable for runtime config, but the hack is still needed because the module doesnt use the config for register...
       #TODO this should be in arion-compose, its misleading
