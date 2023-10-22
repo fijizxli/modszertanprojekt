@@ -323,7 +323,8 @@
         };
       nixos.useSystemd = true;
       nixos.configuration = {config, lib, ...}: {
-        #systemd.services.systemd-logind.enable = lib.mkForce true; # Why does arion disablethis? #TODO dont need with the privileged workaround
+        #TODO why did i disable this earlier?
+        systemd.services.systemd-logind.enable = lib.mkForce true; # Why does arion disablethis? #TODO dont need with the privileged workaround
         # We need to use the patched wrapper on unstable because of https://github.com/NixOS/nixpkgs/issues/42117#issuecomment-974194691 -> https://github.com/NixOS/nixpkgs/pull/231673
         #  which manifests as the following in containerized podman:
         #   WARN[0000] "/" is not a shared mount, this could cause issues or missing mounts with rootless containers 
@@ -347,6 +348,7 @@
         virtualisation.podman.dockerCompat = true;
         environment.variables = { DOCKER_HOST = "unix:///run/user/$UID/podman/podman.sock"; }; #TODO should I forward the outside socket instead, instead of nesting?
         #users.extraUsers.podman.autoSubUidGidRange = true; #TODO what does this do exactly
+        #tODO this is unused because the runner service defaults to gitea-runner?#TODO currently the (nested) rootful podman socket is used
         users.extraUsers.podman.subUidRanges = [
           { count = 999; startUid = 1; } # need to leave a hole for the default user map? (change podman config to simplify this?
           { count = userns_size - 65536 - 1001; startUid = 1001; } ];  #TODO these are too fragile right now, I need to figure out a better way to do this #TODO no idea why I need to subtract 4
@@ -382,6 +384,10 @@
           }; #todo firewall exception for  aactnetwork interface
   
         systemd.services.gitea-runner-small.serviceConfig.AllowedCPUs=1; #TODO test
+        #systemd.services.gitea-runner-small.environment.DOCKER_HOST =  lib.mkForce "unix:///run/user/1000/podman/podman.sock"; #TODO can systemd subst uid?
+        #systemd.services.gitea-runner-small.serviceConfig.DynamicUser = lib.mkForce false; #TODO
+        #systemd.services.gitea-runner-small.serviceConfig.Group = lib.mkForce "podman"; #TODO
+        #systemd.services.gitea-runner-small.serviceConfig.User = lib.mkForce "podman"; #TODO
         #  systemd.services.gitea-runner-small.environment.CONTAINERS_REGISTRIES_CONF = pkgs.writeText "registries.conf" ''
         #      unqualified-search-registries = ["localhost:5001"]
         #      [[registry]]
@@ -404,6 +410,7 @@
             #User = "podman";
             #Group = "podman";
             ExecStart = pkgs.writeShellScript "token-request" ''
+               ${pkgs.podman}/bin/podman network create actnetwork #TODO put this somewhere else, i just threw it in here
                set -x #TODO
                # hardlink token file
                #[[ ! -f /run/gitea-token ]] && touch /run/gitea-token # neither symlink nor hardlink, need to move
