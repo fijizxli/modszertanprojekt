@@ -120,9 +120,10 @@ func UpdateAssignees(ctx context.Context, issue *issues_model.Issue, oneAssignee
 	// Update the assignee. The function will check if the user exists, is already
 	// assigned (which he shouldn't as we deleted all assignees before) and
 	// has access to the repo.
-	for _, assignee := range allNewAssignees {
+        var assigneeEnd int = len(allNewAssignees) - 1
+	for i, assignee := range allNewAssignees {
 		// Extra method to prevent double adding (which would result in removing)
-		_, err = AddAssigneeIfNotAssigned(ctx, issue, doer, assignee.ID, true)
+		_, err = AddAssigneeIfNotAssigned(ctx, issue, doer, assignee.ID, i == assigneeEnd )
 		if err != nil {
 			return err
 		}

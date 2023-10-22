@@ -1,3 +1,4 @@
+
 import $ from 'jquery';
 import {
   initRepoIssueBranchSelect, initRepoIssueCodeCommentCancel, initRepoIssueCommentDelete,
@@ -105,15 +106,24 @@ export function initRepoCommentForm() {
       async onHide() {
         hasUpdateAction = $listMenu.data('action') === 'update'; // Update the var
         if (hasUpdateAction) {
-          // TODO: Add batch functionality and make this 1 network request.
           const itemEntries = Object.entries(items);
-          for (const [elementId, item] of itemEntries) {
+          if (selector == 'select-assignees-??') { //TODO special cased for now, needs to be done for the other features as well
+            // TODO: Add batch functionality and make this 1 network request.
             await updateIssuesMeta(
-              item['update-url'],
-              item.action,
-              item['issue-id'],
-              elementId,
+              $listMenu.data('update-url'),
+              null, //TODO currently ignored anyway, it's just a toggle trick?
+              $listMenu.data('issue-id'),
+              itemEntries.map(x => x[0]).toString()
             );
+          } else {
+            for (const [elementId, item] of itemEntries) {
+              await updateIssuesMeta(
+                item['update-url'],
+                item.action,
+                item['issue-id'],
+                elementId,
+              );
+            }
           }
           if (itemEntries.length) {
             reloadConfirmDraftComment();

@@ -269,6 +269,10 @@ require (
 	github.com/spf13/viper v1.14.0 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
+	github.com/tidwall/gjson v1.14.2 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
 	github.com/unknwon/com v1.0.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
