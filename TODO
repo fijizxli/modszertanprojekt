@@ -1,2 +1,7 @@
 - top level vendor dir or otherwise dir for patched upstreams? (@cbaksay)
 - never did figure our how git subtree moves work (@cbaksay)
+
+
+Deployment
+- create qemu VM based deployment option so no host configuration is needed
+- letsencrypt certs

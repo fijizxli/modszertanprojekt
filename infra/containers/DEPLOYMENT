@@ -1,0 +1,3 @@
+run nix-shell devShell.nix
+arion up -d to bring up containers (TODO: host nixos need to do be configured appropriately;TODO: userspace vm?)
+socat TCP-LISTEN:64743,fork TCP:localhost:4000 to expose port
