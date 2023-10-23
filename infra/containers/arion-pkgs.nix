@@ -100,7 +100,7 @@ let
         patches = []; # remove the static work path patch so that we can use env var in merger package
         postPatch = ""; #TODO wtf?
         #TODO since we are using a vanilla repo not an upstream tar dist, we dont have a vendor dir so we need to FOD        
-        vendorHash = "sha256-Q9tESPXN5GOsosSJARoNZY9lfaW1X/RMhNp7DWaO4Hw="; #self.lib.fakeHash; #"sha256-wsP0svEYc7+IFjsZJGo8J/LxdqZpc34dsahgN6CgJck=";
+        vendorHash = "sha256-wsP0svEYc7+IFjsZJGo8J/LxdqZpc34dsahgN6CgJck=";
         postInstall = ''
           mkdir $data
           cp -R ./{templates,options} $data

@@ -1,3 +1,4 @@
+#TODO persistent logging
 #TODO vpn host?
 #TODO pinning
 #TODO ...probably switch to forgejo, but it seems to be behind upstream
@@ -108,32 +109,40 @@
               sleep 15
               if [[ ! -f /var/lib/gitea/gitea-has-admin ]]; then
                 # Add admin user since we have registration off #TODO
+                #TODO --access-token flag kinda useless? cant pass scope?
                 token=$(
-                  ${config.services.gitea.package}/bin/gitea admin user create --username testadmin --password testadmin --access-token --email fake@fake.fake --admin --must-change-password=false |
+                  ${config.services.gitea.package}/bin/gitea admin user create --username testadmin --password testadmin --email fake@fake.fake --admin --access-token --must-change-password=false |
                     ${pkgs.gawk}/bin/awk 'match($0, /Access token was successfully created... (.*)/, a) { print a[1] } END { if(!a[1]) { exit(1) } };'
                   )
                 [ "x$token" == x ] && exit 1
-                touch /var/lib/gitea/gitea-has-admin
+                #TODO technically storing this should be fine since we are already the gitea user?
+                # a token we can actually do something with
+                token=$(${config.services.gitea.package}/bin/gitea admin user generate-access-token --token-name all n--username testadmin --scopes all --raw)
+                echo "$token" > /var/lib/gitea/gitea-has-admin
+              else
+                token=$(cat /var/lib/gitea/gitea-has-admin)
               fi
-              if [[ -f /var/lib/gitea/gitea-has-bot-webhook ]]; then
-                # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
-                read responseCode < <(curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: token $(token)" \
-                  -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:5000/v1/msg", "http_method":"get"}}' |
-                    tail -n 1)
-                [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
-                touch /var/lib/gitea/gitea-has-bot-webhook
+              if [[ ! -f /var/lib/gitea/gitea-has-bot-webhook ]]; then
+              echo "TODO webhook api is currently broken see https://github.com/go-gitea/gitea/issues/23139"
+              #  # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
+              #  read responseCode < <(${pkgs.curl}/bin/curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
+              #    -H "Content-Type: application/json" \
+              #    -H "Authorization: token $token" \
+              #    -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:5000/v1/handle_webhook?payload=", "http_method":"get"}}' |
+              #      tail -n 1)
+              #  [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
+              #  touch /var/lib/gitea/gitea-has-bot-webhook
               fi
-              if [[ -f /var/lib/gitea/gitea-has-shell2-webhook ]]; then
-                # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
-                read responseCode < <(curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
-                  -H "Content-Type: application/json" \
-                  -H "Authorization: token $(token)" \
-                  -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:55555/v1/msg?payload=", "http_method":"get"}}' |
-                    tail -n 1)
-                [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
-                touch /var/lib/gitea/gitea-has-shell2-webhook
+              if [[ ! -f /var/lib/gitea/gitea-has-shell2-webhook ]]; then
+              echo "TODO webhook api is currently broken see https://github.com/go-gitea/gitea/issues/23139"
+              #  # dd webhook to the signal bot (though this should probably be separated into a separate module somehow; how do you compose systemd services? - well I guess this can be handled as an orthogonal service
+              #  read responseCode < <(${pkgs.curl}/bin/curl -s -X POST -k https://gitea:64743/api/v1/admin/hooks \
+              #    -H "Content-Type: application/json" \
+              #    -H "Authorization: token $token" \
+              #    -d '{"active":true, "branch_filter":"*", "events":["send_everything"], "type":"gitea", "config":{"content_type":"json", "url":"http://signalbot:55555/v1/msg?payload=", "http_method":"get"}}' |
+              #      tail -n 1)
+              #  [[ $responseCode =~ 2[0-9]{2} ]] || exit 1 
+              #  touch /var/lib/gitea/gitea-has-shell2-webhook
               fi
               touch /var/lib/gitea/gitea-inited-flag
               '';
@@ -176,7 +185,7 @@
               DISABLE_HTTP_GIT = false; #TODO does this meen http protocol or only allow https?
               };
             webhook = {
-              ALLOWED_HOST_LIST = "loopback";
+              ALLOWED_HOST_LIST = "signalbot";
               };
             actions.ENABLED = true;
             };
@@ -555,12 +564,14 @@
             environment = {
               SIGNAL_NOTIF_GROUP= "l4BGXE5AOs0S9UZOCcMTw3e2b3z8o/Nqy0aEvCM2vII=";
               SIGNAL_ACCT = "+37258976290";
+              XDG_RUNTIME_DIR="/run"; # for the bot to find the socket in tmp/signald
               };
             serviceConfig = {
               RestartSec = 5; #TODO proper retry logic
               #User = config.services.signald.user;
               #TODO proper
-              ExecStart = ''
+              ExecStart = pkgs.writeShellScript "signalbot" ''
+                ${pkgs.coreutils}/bin/sleep 10 #TODO race condition with signald socket for some reason
                 ${pkgs.signalBot}/bin/python ${../signalbot/bot.py}
                 '';
               User = config.services.signald.user;

@@ -263,7 +263,7 @@ async def main():
         await bot.start(callback)
 
 def _main():
-    t = threading.Thread(target=app.run).start()
+    t = threading.Thread(target=app.run, kwargs={"host":"0.0.0.0"}).start()
     anyio.run(main)
 
 _main()
