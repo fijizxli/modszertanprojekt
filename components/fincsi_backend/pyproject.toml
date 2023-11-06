@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "fincsi"
+version = "0.1.0"
+description = ""
+author = ""
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^4.2"
+djangorestframework = "^3.14"
+dj-rest-auth = "^5.0"
+django-allauth = "^0.55"
+psycopg = "^3.1"
+pillow = "^10.1"
