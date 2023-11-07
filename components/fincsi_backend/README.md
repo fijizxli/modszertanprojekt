@@ -21,3 +21,10 @@
 
 - Run python manage.py migrate
 - Run python manage.py runserver
+
+# Documentation
+- [django](https://docs.djangoproject.com/en/4.2/)
+- [djangorestframework](https://www.django-rest-framework.org/)
+- [dj-rest-auth](https://dj-rest-auth.readthedocs.io/en/latest/)
+- [django-allauth](https://docs.allauth.org/en/latest/)
+- [psycopg](https://www.psycopg.org/docs/)
