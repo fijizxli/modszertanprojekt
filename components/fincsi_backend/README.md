@@ -4,6 +4,7 @@
 - dj-rest-auth
 - django-allauth==0.58
 - psycopg 
+- drf-spectacular
 
 # Why we need dj-rest-auth and django-allauth?
 
@@ -28,6 +29,7 @@
 - [dj-rest-auth](https://dj-rest-auth.readthedocs.io/en/latest/)
 - [django-allauth](https://docs.allauth.org/en/latest/)
 - [psycopg](https://www.psycopg.org/docs/)
+- [drf-spectacular](https://drf-spectacular.readthedocs.io/en/latest/readme.html)
 
 
 # pg_service.conf example:
