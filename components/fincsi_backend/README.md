@@ -28,3 +28,15 @@
 - [dj-rest-auth](https://dj-rest-auth.readthedocs.io/en/latest/)
 - [django-allauth](https://docs.allauth.org/en/latest/)
 - [psycopg](https://www.psycopg.org/docs/)
+
+
+# pg_service.conf example:
+
+[fincsidb]
+host=localhost
+user=postgres
+dbname=fincsidb
+port=5432
+
+# .my_pgpass example:
+localhost:5432:fincsidb:postgres:password
