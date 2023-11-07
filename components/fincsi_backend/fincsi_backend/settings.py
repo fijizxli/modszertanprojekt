@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     # "allauth.socialaccount",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -108,6 +109,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Password validation
@@ -158,3 +160,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = ""
 # EMAIL_HOST_PASSWORD = ""
+
+SPECTAULAR_SETTINGS = {
+    "TITLE": "FincsiFalatok",
+    "DESCRIPION": "The best recipe website.",
+    "VERSION": "0.0.1",
+}
