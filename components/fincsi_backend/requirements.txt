@@ -1,0 +1,7 @@
+django
+djangorestframework
+dj-rest-auth
+django-allauth==0.58
+psycopg[binary]
+drf-spectacular
+python-dotenv
