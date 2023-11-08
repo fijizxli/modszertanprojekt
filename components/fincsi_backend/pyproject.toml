@@ -13,6 +13,10 @@ dj-rest-auth = "^5.0"
 django-allauth = "^0.55"
 psycopg = {extras = ["binary"], version = "^3.1"}
 pillow = "^10.1"
+django-rest-swagger = "^2.2.0"
+drf-spectacular = "^0.26.5"
+# Temporary workaround to get poetry2nix to build it until their version is updated
+rpds-py = "0.10.6"
 
 
 [build-system]
