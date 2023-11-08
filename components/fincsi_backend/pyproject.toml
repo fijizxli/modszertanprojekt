@@ -2,13 +2,19 @@
 name = "fincsi"
 version = "0.1.0"
 description = ""
-author = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 django = "^4.2"
 djangorestframework = "^3.14"
 dj-rest-auth = "^5.0"
 django-allauth = "^0.55"
-psycopg[binary] = "^3.1"
+psycopg = {extras = ["binary"], version = "^3.1"}
 pillow = "^10.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
