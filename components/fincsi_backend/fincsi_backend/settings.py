@@ -13,11 +13,13 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+
 load_dotenv(dotenv_path=".env.dev")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -30,7 +32,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # DEBUG = false
 DEBUG = bool(os.environ.get("DEBUG", default=0))
 
-#ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 
@@ -60,6 +62,7 @@ INSTALLED_APPS = [
     "allauth.account",
     # "allauth.socialaccount",
     "drf_spectacular",
+    "falatok.apps.FalatokConfig",
 ]
 
 MIDDLEWARE = [
@@ -97,7 +100,7 @@ WSGI_APPLICATION = "fincsi_backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-#DATABASES = {
+# DATABASES = {
 #    "default": {
 #        "ENGINE": "django.db.backends.postgresql",
 #        "OPTIONS": {
@@ -105,7 +108,7 @@ WSGI_APPLICATION = "fincsi_backend.wsgi.application"
 #            "passfile": ".my_pgpass",
 #        },
 #    }
-#}
+# }
 
 DATABASES = {
     "default": {
