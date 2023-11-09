@@ -19,6 +19,7 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
+    path("", include('falatok.urls')),
     path("admin/", admin.site.urls),  # admin site
     path(
         "api-auth/", include("rest_framework.urls")
