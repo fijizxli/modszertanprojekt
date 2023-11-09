@@ -2,3 +2,4 @@
 **/migrations
 components/fincsi_backend/.my_pgpass
 **/*Zone.Identifier
+components/fincsi_backend/media/*
