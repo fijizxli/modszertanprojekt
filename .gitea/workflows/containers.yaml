@@ -1,0 +1,47 @@
+#Note in theory gitea.whatever should be replaceable with github.whatever
+name: Build and store production containers
+run-name: ${{ gitea.actor }} is building container images 🚀
+on: [push]
+
+# based on
+# https://docs.gitea.com/usage/actions/quickstart and
+# https://www.dev-hub.eu/2023/09/20/building-and-pushing-a-docker-image-with-gitea-actions-and-buildah/
+#  https://github.com/redhat-actions/buildah-build
+#  https://github.com/redhat-actions/push-to-registry
+jobs:
+  build-images:
+    # The image used is from https://github.com/catthehacker/docker_images , though the images recommended by distrobox may also be of interest (the image has to be set up in the runner)
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ gitea.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by Gitea!"
+      - run: echo "🔎 The name of your branch is ${{ gitea.ref }} and your repository is ${{ gitea.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - run: echo "💡 The ${{ gitea.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: List files in the repository
+        run: |
+          ls ${{ gitea.workspace }}
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+      - name: Build image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: djangofalatok
+          tags: latest ${{ gitea.sha }}
+          containerfiles: |
+            ./components/fincsi_backend/dockerfile
+
+      - name: Push to kolmogorov registry
+        id: push-to-kolmo
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: p.p2.kolmogorov.space/ModszProj/project
+          username: actionsautomation
+          password: ${{ secrets.actionsautomation_pat }}
+
+      - name: Print iamge URL
+        run: echo "Image puhed to ${{ steps.push-to-kolmo.outputs.registry-paths }}"
