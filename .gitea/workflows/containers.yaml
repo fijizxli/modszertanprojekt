@@ -16,6 +16,12 @@ jobs:
       - run: echo "🎉 The job was automatically triggered by a ${{ gitea.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by Gitea!"
       - run: echo "🔎 The name of your branch is ${{ gitea.ref }} and your repository is ${{ gitea.repository }}."
+      - name: fix distro
+        run: |
+          sed -i 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf
+          apt-get update
+          apt-get install nodejs
+
       - name: Check out repository code
         uses: actions/checkout@v3
       - run: echo "💡 The ${{ gitea.repository }} repository has been cloned to the runner."
