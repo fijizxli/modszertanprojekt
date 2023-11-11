@@ -16,12 +16,30 @@ jobs:
       - run: echo "🎉 The job was automatically triggered by a ${{ gitea.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by Gitea!"
       - run: echo "🔎 The name of your branch is ${{ gitea.ref }} and your repository is ${{ gitea.repository }}."
+#      - name: fix distro
+#        run: |
+#          set -x
+#          # https://stackoverflow.com/questions/41032744/unable-to-edit-etc-resolv-conf-in-docker-container/57606548#57606548
+#          echo "$(sed 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf)" > /etc/resolv.conf
+#          apt-get -y update
+#          #apt-get -y install nix # for the checkout action (note this may be the "wrong" version)
+#          curl -L https://nixos.org/nix/install | sh -s -- --daemon --yes
+#          echo '/nix/var/nix/profiles/default/bin' >> $GITHUB_PATH
+#          git config --global http.sslVerify false
+#          mkdir -p /etc/containers
+#          echo '{"default":[{"type":"insecureAcceptAnything"}],"transports":{"docker-daemon":{"":[{"type":"insecureAcceptAnything"}]}}}' > /etc/containers/policy.json
+#          echo -e '[registries]\n[registries.search]\nregistries = ["docker.io", "quay.io"]\n' > /etc/containers/registries.conf
+#      - name: add system deps
+#        run: |
+#          nix-daemon & sleep 1;
+#          nix-env -iA nixpkgs.nodejs && nix-env -iA nixpkgs.buildah
       - name: fix distro
         run: |
-          sed -i 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf
-          apt-get update
-          apt-get install nodejs
-
+          set -x
+          # https://stackoverflow.com/questions/41032744/unable-to-edit-etc-resolv-conf-in-docker-container/57606548#57606548
+          echo "$(sed 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf)" > /etc/resolv.conf
+          echo '/nix/var/nix/profiles/default/bin' >> $GITHUB_PATH
+          mkdir /tmp/pls
       - name: Check out repository code
         uses: actions/checkout@v3
       - run: echo "💡 The ${{ gitea.repository }} repository has been cloned to the runner."
@@ -37,7 +55,13 @@ jobs:
           image: djangofalatok
           tags: latest ${{ gitea.sha }}
           containerfiles: |
-            ./components/fincsi_backend/dockerfile
+            ./components/fincsi_backend/Dockerfile
+          context: ./components/fincsi_backend
+          #TODO dont explicitly referto the runner user
+          #TODO the lib/containers mount workaround is only for the docker pull attempt and shouldnt even be necessary, why is podman trying to check docker too? https://github.com/containers/buildah/issues/5167 #TODO this isnt actually fixing the prblem
+          extra-args: |
+            --volume=/root/.cache/pip:/root/.cache/pip
+            --volume=/tmp/pls:/var/lib/containers
 
       - name: Push to kolmogorov registry
         id: push-to-kolmo
@@ -45,9 +69,11 @@ jobs:
         with:
           image: ${{ steps.build-image.outputs.image }}
           tags: ${{ steps.build-image.outputs.tags }}
-          registry: p.p2.kolmogorov.space/ModszProj/project
+          #TODO kind of funky that gitea makes use handle packages though the owner and cant deal withh it per repo?
+          registry: p.p2.kolmogorov.space:64743/modszproj
           username: actionsautomation
           password: ${{ secrets.actionsautomation_pat }}
+          tls-verify: false
 
       - name: Print iamge URL
         run: echo "Image puhed to ${{ steps.push-to-kolmo.outputs.registry-paths }}"

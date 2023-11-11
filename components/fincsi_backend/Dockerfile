@@ -12,4 +12,4 @@ COPY run.bash /run.bash
 
 EXPOSE 8000
 
-CMD ["run.bash"]
+CMD ["/run.bash"]
