@@ -314,6 +314,7 @@
     act_runner = {lib, ...}: let userns_size = 6553600-65536; in {
       image.enableRecommendedContents = true; # TODO what does this do #TODO still havent looked  into what this does but without it lazydocker is missing tols to drop into a shell with "/bin/sh: line 1: `{cut,id,grep}`: command not found"
       out.service.userns_mode = "auto:size=${toString userns_size}"; #TODO correct? #TODO the podman run documentatio n does not explain this clearly #TODO this entire bit is kinda confusing, per the code the username is ignored but per the docs its left implicit / somewhat misleading. also the size?- is the same size used for both uid and gid?
+      out.service.security_opt = [ "unmask=/proc/*" ]; # https://github.com/containers/podman/issues/20453#issuecomment-1787538919
       service = {
         volumes = [ "runner-token-share:/run/gitea-token-share" ]; #TODO is there no simpler way to do this? We pass a unix socket over a volume to notify the gitea container to generate us a urnner token and send it back over
 #        privileged = true; #TODO neede dto work around the oci permissioon denied issue for /proc, wonder if this would have influenced anything else I was debugging
@@ -373,6 +374,11 @@
         system.stateVersion = "23.05";
         boot.tmp.useTmpfs = true;
 
+        environment.etc."containers/registries.conf".source = lib.mkForce ((pkgs.formats.toml { }).generate "registries.conf" {
+          unqualified-search-registries = [ "docker.io" "quay.io" ];
+          registry = [
+            { prefix = "docker.io/kolmogorov/ubuntu-toolbox"; location = "p.p2.kolmogorov.space:64743/modszproj/buildimage"; insecure = true; } 
+            ];});
 
         #TODO I need to temporarily patch permissions out on this or something because having to readdi it every time is not going to go well
         services.gitea-actions-runner.instances.small = {
@@ -381,13 +387,22 @@
           tokenFile = "/run/gitea-token";
 #          url = "https://p.p2.kolmogorov.space:64743";
           url = "https://gitea:64743";
-          labels = [ "ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04" ]; #TODO
+          #labels = [ "ubuntu-22.04:docker://catthehacker/ubuntu:act-22.04" ]; #TODO
+          #labels = [ "ubuntu-22.04:docker://toolbx-images/ubuntu-toolbox:22.04" ]; #more usable image, but needs to have packages set up before use, so we need to cache stuff.. (i.e. use our own builder images...somehow)
+          labels = [ "ubuntu-22.04:docker://kolmogorov/ubuntu-toolbox:22.04" ]; #more usable image, but needs to have packages set up before use, so we need to cache stuff.. (i.e. use our own builder images...somehow)
           settings = {
             log = { level = "debug"; };
             runner = { insecure = true; };
             container = {
               network = "actnetwork";
-              options = "--cap-add=NET_RAW --cap-add=NET_ADMIN";
+              #TODO I dont know how to handle this in a portable way,(without writing more scripts?) - the iinner resolv.conf only ends up having dns configuration for the inner network like 10.89.0.0, but the host is on 10.89.1.0, so dns names arent visible. We work around this by configuring dns manually in hte internal image...
+              # containerstore is a workaround for nested overlayfs not working or something? TODO xlink issue
+              #TODO im not sure these are properly taking effect / volume is a separate ocnfig?
+              #TODO lack of visibility hear means that my solutions may have been confounded, not sure if the mount is necessary or lck of fuse was making overlayfs fail, or bothneeeded
+              #TODO I also mayhave misread the error message and fixe dit several iterations ago
+              #TODO named volumes dont work for some reason but anonymous do
+              #TODO I didnt notice the cap ptrace above and its needed here too, so i must ahve run into the same issue before and forgot?
+              options = "--cap-add=NET_RAW --cap-add=NET_ADMIN --cap-add=SYS_ADMIN --cap-add=SYS_PTRACE --security-opt unmask=/proc/* --device=/dev/fuse --device=/dev/net/tun --volume=/var/lib/containers/storage";
               };
             };
           }; #todo firewall exception for  aactnetwork interface
@@ -562,7 +577,8 @@
             wantedBy = [ "signald.service" ];
             path = [ pkgs.signalBot ]; # TODO is there a point to this if exec needs an abspath anyway?
             environment = {
-              SIGNAL_NOTIF_GROUP= "l4BGXE5AOs0S9UZOCcMTw3e2b3z8o/Nqy0aEvCM2vII=";
+              #SIGNAL_NOTIF_GROUP= "l4BGXE5AOs0S9UZOCcMTw3e2b3z8o/Nqy0aEvCM2vII="; # Test environment
+              SIGNAL_NOTIF_GROUP= "3Ho2kTe4WlVFcjWSAJ7+Mu9rqZbNrj8YBf09YESsVzs=";
               SIGNAL_ACCT = "+37258976290";
               XDG_RUNTIME_DIR="/run"; # for the bot to find the socket in tmp/signald
               };
