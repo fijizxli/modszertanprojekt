@@ -1,0 +1,3 @@
+to change the image, build it and upload it (upload.sh)
+then it probably needs to be updated in the actions runner by pulling (the approprite label) on the actions runner host, idk if it autoupdates
+(podman pull docker.io/kolmogorov/ubuntu-toolbox:22.04)
