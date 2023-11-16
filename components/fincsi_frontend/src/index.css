@@ -2,6 +2,14 @@ body {
    margin: 0;
 }
 
+.logo-container {
+  height: 100%;
+}
+
+.logo-container svg {
+  height: 100%;
+}
+
 nav {
   height: 5rem;
   position: sticky;
