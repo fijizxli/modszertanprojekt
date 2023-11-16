@@ -1,5 +1,5 @@
 import React from 'react'
-import footerDecorator from '../assets/footerDecorator.png'
+import footerDecorator from '../assets/footer-decorator.png'
 
 export default function Footer() {
   return (

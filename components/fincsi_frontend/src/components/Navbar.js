@@ -1,11 +1,13 @@
 import React from 'react'
-import fincsiLogo from '../assets/dummy_logo.png'
+import {ReactComponent as FincsiLogo} from '../assets/logo.svg'
 
 export default function Navbar() {
   return (
     <div>
         <nav>
-              <img src={fincsiLogo} alt='Logo' className='Logo'></img>
+              <div class="logo-container">
+                <FincsiLogo/>
+              </div>
               <li>Keresés</li>
               <li>Felfedezés</li>
               <li>Új recept</li>
