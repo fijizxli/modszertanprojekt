@@ -25,6 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 
+#https://fractalideas.com/blog/making-react-and-django-play-well-together-hybrid-app-model/
+BACKEND_DIR = BASE_DIR
+FRONTEND_DIR = BASE_DIR.parent / 'fincsi_frontend'
+
+REACT_DEV_SERVER_URL = os.environ.get("REACT_DEV_SERVER_URL", default="http://localhost:3000")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -34,7 +40,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = false
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = os.environ.get("DEBUG", default=False) != "False" and os.environ.get("DEBUG", default=False)  != "0"
 
 # ALLOWED_HOSTS = []
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
@@ -67,9 +73,15 @@ INSTALLED_APPS = [
     # "allauth.socialaccount",
     "drf_spectacular",
     "falatok.apps.FalatokConfig",
+    "debug_toolbar",
+    "django_extensions"
 ]
 
+#For debug toolbar, https://django-debug-toolbar.readthedocs.io/en/latest/installation.html
+INTERNAL_IPS = [ "127.0.0.1" ]
+
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -88,7 +100,7 @@ ROOT_URLCONF = "fincsi_backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [ FRONTEND_DIR / 'build' ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -173,7 +185,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "static2/" if DEBUG else "static/" #TODO this is a hack to get routing working in dev mode
+STATICFILES_DIRS = [ FRONTEND_DIR / 'build' / 'static' ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
