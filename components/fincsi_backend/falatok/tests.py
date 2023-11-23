@@ -198,3 +198,39 @@ class RecipeTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Recipe.objects.count(), 3)
+
+    def testRecipePatchString(self):
+        view = RecipeViewSet.as_view({"patch": "partial_update"})
+        data = {
+            "title": "csalafinta palacsinta",
+            "ingredients": "tej",
+            "description": "csinalja meg",
+            "directions": "nagyon nagyon ugyesen",
+        }
+        request = self.factory.patch(
+            "/api/falatok/recipes/1/",
+            data,
+            format="json",
+        )
+        pk = Recipe.objects.get().id
+        force_authenticate(request, user=self.user)
+        response = view(request, pk=pk)
+        response.render()
+        jresponse = j.loads(response.content)
+        expresponse = {
+            "owner": "testuser",
+            "title": "csalafinta palacsinta",
+            "ingredients": "tej",
+            "description": "csinalja meg",
+            "directions": "nagyon nagyon ugyesen",
+            "preparation_time": "01:13:03",
+            "cooking_time": "02:00:32",
+            "photo": "http://testserver/media/" + Recipe.objects.get().photo.name,
+            "guides": ["https://test.xd", "https://test2.xd"],
+        }
+        del jresponse["id"]
+        del jresponse["url"]
+        del jresponse["recipe"]
+        self.assertEqual(jresponse, expresponse)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
