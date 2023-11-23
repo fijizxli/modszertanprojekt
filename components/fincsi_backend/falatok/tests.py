@@ -134,3 +134,12 @@ class RecipeTestCase(APITestCase):
         response = view(request, pk=pk)
         response.render()
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def testRecipeGetInstance(self):
+        view = RecipeViewSet.as_view({"get": "retrieve"})
+        request = self.factory.get("/api/falatok/recipes/1")
+        force_authenticate(request, user=self.user)
+        pk = Recipe.objects.get().id
+        response = view(request, pk=pk)
+        response.render()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
