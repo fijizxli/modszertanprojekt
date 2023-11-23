@@ -143,3 +143,58 @@ class RecipeTestCase(APITestCase):
         response = view(request, pk=pk)
         response.render()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def testRecipeGetList(self):
+        pview1 = RecipeViewSet.as_view({"post": "create"})
+        pview2 = RecipeViewSet.as_view({"post": "create"})
+
+        photo_file1 = self.generate_photo_file()
+        photo_file2 = self.generate_photo_file()
+        data1 = {
+            "title": "palacsinta1 yyy:)",
+            "ingredients": "tej",
+            "description": "csinald meg",
+            "directions": "ugyesen",
+            "preparation_time": "01:13:03",
+            "cooking_time": "02:00:32",
+            "photo": photo_file1,
+            "guides": ["https://test.xd", "https://test2.xd"],
+        }
+
+        data2 = {
+            "title": "palacsinta2xxx :)",
+            "ingredients": "tej",
+            "description": "csinald meg",
+            "directions": "ugyesen",
+            "preparation_time": "01:13:03",
+            "cooking_time": "02:00:32",
+            "photo": photo_file2,
+            "guides": ["https://test.xd", "https://test2.xd"],
+        }
+
+        content1 = encode_multipart("wyz", data1)
+        content2 = encode_multipart("wyz", data2)
+        content_type = "multipart/form-data; boundary=wyz"
+
+        prequest1 = self.factory.post(
+            "/api/falatok/recipes/", content1, content_type=content_type
+        )
+        prequest2 = self.factory.post(
+            "/api/falatok/recipes/", content2, content_type=content_type
+        )
+        force_authenticate(prequest1, user=self.user)
+        force_authenticate(prequest2, user=self.user)
+
+        presponse1 = pview1(prequest1)
+        presponse2 = pview2(prequest2)
+        presponse1.render()
+        presponse2.render()
+
+        view = RecipeViewSet.as_view({"get": "list"})
+        request = self.factory.get("/api/falatok/recipes/")
+        force_authenticate(request, user=self.user)
+        response = view(request)
+        response.render()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Recipe.objects.count(), 3)
