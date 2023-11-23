@@ -126,3 +126,11 @@ class RecipeTestCase(APITestCase):
             ["https://test.xd", "https://test2.xd"],
         )
 
+    def testRecipeDelete(self):
+        view = RecipeViewSet.as_view({"delete": "destroy"})
+        request = self.factory.delete("/api/falatok/recipes")
+        force_authenticate(request, user=self.user)
+        pk = Recipe.objects.all()[0].id
+        response = view(request, pk=pk)
+        response.render()
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
