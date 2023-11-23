@@ -103,3 +103,26 @@ class RecipeTestCase(APITestCase):
 
         self.assertEqual(jresponse, expresponse)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def testRecipeModel(self):
+        self.assertEqual(Recipe.objects.get().title, "palacsinta :)")
+        self.assertEqual(Recipe.objects.get().ingredients, "tej")
+        self.assertEqual(Recipe.objects.get().description, "csinald meg")
+        self.assertEqual(Recipe.objects.get().directions, "ugyesen")
+        self.assertEqual(
+            Recipe.objects.get().photo.name,
+            Recipe.objects.get().photo.name,
+        )
+        self.assertEqual(
+            Recipe.objects.get().preparation_time,
+            timedelta(hours=1, minutes=13, seconds=3),
+        )
+        self.assertEqual(
+            Recipe.objects.get().cooking_time, timedelta(hours=2, minutes=0, seconds=32)
+        )
+
+        self.assertEqual(
+            Recipe.objects.get().guides,
+            ["https://test.xd", "https://test2.xd"],
+        )
+
