@@ -56,3 +56,50 @@ class RecipeTestCase(APITestCase):
         file.name = pname + ".png"
         file.seek(0)
         return file
+
+    def testRecipePost(self):
+        photo_file = self.generate_photo_file()
+
+        view = RecipeViewSet.as_view({"post": "create"})
+
+        data = {
+            "title": "palacsinta :)",
+            "ingredients": "tej",
+            "description": "csinald meg",
+            "directions": "ugyesen",
+            "preparation_time": "01:13:03",
+            "cooking_time": "02:00:32",
+            "photo": photo_file,
+            "guides": ["https://test.xd", "https://test2.xd"],
+        }
+
+        content = encode_multipart("wyz", data)
+        content_type = "multipart/form-data; boundary=wyz"
+
+        request = self.factory.post(
+            "/api/falatok/recipes/", content, content_type=content_type
+        )
+        force_authenticate(request, user=self.user)
+
+        response = view(request)
+        response.render()
+        jresponse = j.loads(response.content)
+
+        expresponse = {
+            "owner": "testuser",
+            "title": "palacsinta :)",
+            "ingredients": "tej",
+            "description": "csinald meg",
+            "directions": "ugyesen",
+            "preparation_time": "01:13:03",
+            "cooking_time": "02:00:32",
+            "photo": "http://testserver/media/" + photo_file.name,
+            "guides": ["https://test.xd", "https://test2.xd"],
+        }
+
+        del jresponse["id"]
+        del jresponse["url"]
+        del jresponse["recipe"]
+
+        self.assertEqual(jresponse, expresponse)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
