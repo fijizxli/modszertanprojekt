@@ -1,5 +1,5 @@
 import React from 'react'
-import fincsiLogo from '../assets/dummy_logo.png'
+import fincsiLogo from '../assets/logo-1024x1115.png'
 
 export default function Navbar() {
   return (
@@ -11,6 +11,6 @@ export default function Navbar() {
               <li>Új recept</li>
               <li className='Spacer'></li>
               <li className='Profile'>Sign out</li>
-       </nav>
+      </nav>
     </div> )
 }
