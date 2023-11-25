@@ -2,13 +2,18 @@ import { createContext, useState } from "react";
 
 const DataContext =  createContext();
 
-
 export const DataProvider = ({ children }) => {
     
-    const [TestText, SetTestText] = useState("Még nem működik")
+    const [AuthModalType, setAuthModalType] = useState("Inactive")
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    
+    
+    const [TestText, setTestText] = useState("Még nem működik")
+
+
     
     return (
-        <DataContext.Provider value={{ TestText, SetTestText}}>
+        <DataContext.Provider value={{ TestText, setTestText}}>
         {children}
       </DataContext.Provider>
     )

@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import Lorem from './components/Lorem';
 import './components/Navbar'
 import Navbar from './components/Navbar';
+import AuthenticationModal from './components/AuthenticationModal';
 
 
 /**
@@ -19,6 +20,7 @@ function App() {
     <DataProvider>
       <div className="App">
       <Navbar/>
+      <AuthenticationModal/>
       <h1>Hello World</h1>
       <Lorem/>
       <Lorem/>
