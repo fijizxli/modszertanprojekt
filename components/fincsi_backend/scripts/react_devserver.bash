@@ -27,9 +27,9 @@ cd "$PROJ_ROOT/fincsi_frontend"
 
 [[ ! -d node_modules ]] && npm install
 
-{ npm start | cat -; } & pid=$!
+#{ npm start | cat -; } & pid=$!
 #TODO I dont know why we need to fight with the process tree of npm start
 #TODO IDK how long we need to sleep
+npm start 1>/dev/null 2>/dev/null & pid=$!
 sleep 4; procs=($(get_children))
-#npm start & pid=$!
 wait "$pid"

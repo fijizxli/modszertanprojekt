@@ -5,5 +5,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 PROJ_ROOT=$(dirname $(dirname $(dirname -- "$SCRIPT_DIR")))
 
 echo "Running shellcheck..."
+shopt -s globstar
 shellcheck -o all "$PROJ_ROOT"/**/*.bash
+shopt -u globstar
 echo "End of shellcheck output"

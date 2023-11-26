@@ -82,7 +82,14 @@ check_postgres_ready() {
   local user="$3"
   local password="$4"
   local database="$5"
-  PGPASSWORD="$password" psql -h "$host" -p "$port" -U "$user" "$database" -c ""
+
+  #TODO this isnt integrated well here since we dont load the env files
+  if [[ -z "$ignore_psql" ]] && command -v psql; then
+    PGPASSWORD="$password" psql -h "$host" -p "$port" -U "$user" "$database" -c ""
+  elif "${container_manager:-docker}" inspect postgres; then
+    #TODO this just became veryheavy
+    "${container_manager:-docker}" run --rm --network=host -e PGPASSWORD="$password" postgres psql -h "$host" -p "$port" -U "$user" "$database" -c ""
+  fi
   return $? # Returns 0 if successful
   }
 
@@ -212,8 +219,25 @@ test_split_podman(){
   #TODO check process cleaned up?
   }
 
+#TODO
+test_system_psql() {
+  export ignore_psql=1
+  test_split_docker
+  unset ignore_psql
+  }
+
+test_docker_psql() {
+  test_split_docker
+  }
+
+test_podman_psql() {
+  test_split_podman
+  }
+
 main() {
   set -x
+  # Change tes dir to make sure we arent leaking in the directory
+  cd $(mktemp -d)
 
   scoped_load_envfile "split" "env.split"
 
@@ -235,6 +259,12 @@ main() {
   test_compose_docker
   sleep 3 # maybe port will go away?
   #wait_cleanup_handles
+  test_system_psql
+  sleep 3 # maybe port will go away?
+  test_docker_psql
+  sleep 3 # maybe port will go away?
+  test_podman_psql
+  sleep 3 # maybe port will go away?
   }
 
 main

@@ -27,6 +27,7 @@ load_envfile() {
 #  Inputs: uses global environment from environment file as well as global $container_manager
 #  Outputs: sets $running_postgres
 start_postgres() {
+
   # Start postgres container if nothing is running on the desired postgres port
   if [[ "$(ss -lntpHo sport $SQL_PORT | wc -l)" -gt 0 ]]; then
     echo "Something is already running on port $SQL_PORT, not starting postgres."
@@ -37,7 +38,14 @@ start_postgres() {
     [[ -f "$cid_file" ]] && printf "$cont_id" >> "$cid_file"
 
     # Wait for database to be accessible and finish starting up
-    while ! PGPASSWORD="$SQL_PASSWORD" psql -h "$SQL_HOST" -p "$SQL_PORT" -U "$SQL_USER" "$SQL_DATABASE" -c ""; do echo "waiting for postgres port..."; sleep 3; done
+    #TODO is this slow?
+    #TODO how do I test both branches of this?
+    if [[ -z "$ignore_psql" ]] && command -v psql; then
+      while ! PGPASSWORD="$SQL_PASSWORD" psql -h "$SQL_HOST" -p "$SQL_PORT" -U "$SQL_USER" "$SQL_DATABASE" -c ""; do echo "waiting for postgres port..."; sleep 3; done
+    else
+      #TODO this just became very heavy
+      while ! "${container_manager:-docker}" run --rm --network=host -e PGPASSWORD="$SQL_PASSWORD" postgres psql -h "$SQL_HOST" -p "$SQL_PORT" -U "$SQL_USER" "$SQL_DATABASE" -c ""; do echo "waiting for postgres port..."; sleep 3; done
+    fi
   fi
   }
 
@@ -77,7 +85,8 @@ main(){
   start_postgres
 
   #{ python manage.py migrate && python manage.py runserver "$DJANGO_HOST":"$DJANGO_PORT"; } & wait $!
-  "$PROJ_ROOT/fincsi_backend/scripts/run.bash" & runner_pids+=($!)
+  { cd "$PROJ_ROOT/fincsi_backend"; "$PROJ_ROOT/fincsi_backend/scripts/run.bash"; } & runner_pids+=($!)
+  #TODO for some reason this doesnt have its child npms die between tests properly
   "$PROJ_ROOT/fincsi_backend/scripts/react_devserver.bash" & runner_pids+=($!)
 
   wait "${runner_pids[@]}"

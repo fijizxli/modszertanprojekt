@@ -12,7 +12,7 @@ on_exit() {
   #TODO also what about volumes
   [[ "$pid" ]] && { kill -SIGTERM "$pid"; wait "$pid"; }
   #TODO need a way to allow creating isolated temporary volumes
-  "$container_manager" compose down ${delete_volumes:+-v}
+  "$container_manager" compose --project-directory="$PROJ_ROOT/fincsi_backend/" down ${delete_volumes:+-v}
   }
 
 main() {
@@ -22,7 +22,7 @@ main() {
   trap on_exit EXIT
 
   #TODO need to special-case podman
-  "$container_manager" compose up -d
+  "$container_manager" compose --project-directory="$PROJ_ROOT/fincsi_backend/" up -d
   [[ "$cid_file" ]] && "$container_manager" compose ps -qa >> "$cid_file"
   sleep inf & pid=$!
   wait $pid
