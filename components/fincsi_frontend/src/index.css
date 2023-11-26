@@ -151,5 +151,5 @@ input.AuthInput {
  height: 2rem;
  margin-left: auto;
  margin-right: 0.5rem;
- cursor: grab;
+ cursor: pointer;
 }

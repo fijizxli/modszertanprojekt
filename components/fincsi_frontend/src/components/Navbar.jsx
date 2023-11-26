@@ -17,7 +17,7 @@ export default function Navbar() {
         <li>Felfedezés</li>
         <li>Új recept</li>
         <li className='Spacer'>{isLoggedIn}</li>
-        <li className='SignIn'>Bejelentkezés</li>
+        <li className='SignIn' onClick={() => setAuthModalType("Login")}>Bejelentkezés</li>
         <button className='Profile' onClick={() => setAuthModalType("Register")}>Regisztráció</button>
       </nav>
     </div>;

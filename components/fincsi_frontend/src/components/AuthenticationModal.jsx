@@ -4,29 +4,29 @@ import closeButton from "../assets/close-button.svg";
 import axios from "../axios";
 
 function Register() {
-  const {setAuthModalType} = useContext(DataContext);
-  
+  const { setAuthModalType } = useContext(DataContext);
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password1, setPassword1] = useState("");
   const [password2, setPassword2] = useState("");
-  
 
-    const handleSubmit = async(e) => {
-        e.preventDefault()
-        try {
-            const response = await axios.post("/api/auth/registration/",
-            JSON.stringify({username, email, password1, password2}),
-            {
-              headers: {"Content-Type": "application/json"},
-              withCredentials: true
-            }
-            );
-        } catch (error) {
-            console.log(error)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "/api/auth/registration/",
+        JSON.stringify({ username, email, password1, password2 }),
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
         }
+      );
+    } catch (error) {
+      console.log(error);
     }
-  
+  };
+
   return (
     <div className="AuthShadow">
       <div className="AuthContainer">
@@ -89,7 +89,7 @@ function Register() {
           />
 
           <label>
-            <input type="checkbox" checked="checked" name="remember" /> Maradj bejelentkezve
+            <input type="checkbox" checked="checked" name="remember" /> Szeretnél bejelentkezni inkább?
           </label>
 
           <button className="AuthSubmit" type="submit">
@@ -101,11 +101,133 @@ function Register() {
   );
 }
 
-const Login = () => <div>Login</div>;
+function Login() {
+  const { setAuthModalType } = useContext(DataContext);
 
-const PasswordReset = () => <div>PasswordReset</div>;
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-const DeleteAccount = () => <div>DeleteAccount</div>;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "/api/auth/login/",
+        JSON.stringify({ username, password }),
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  return (
+    <div className="AuthShadow">
+      <div className="AuthContainer">
+        <div className="Titlebar">
+          <h1>Bejelentkezés</h1>
+          <img
+            src={closeButton}
+            alt="close-button"
+            className="Close"
+            onClick={() => setAuthModalType("Inactive")}
+          />
+        </div>
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="username">
+            <b>Felhasználónév</b>
+          </label>
+          <input
+            className="AuthInput"
+            type="text"
+            placeholder="Felhasználónév"
+            id="username"
+            values={username}
+            required
+          />
+          
+          <label htmlFor="password">
+            <b>Jelszó</b>
+          </label>
+          <input
+            className="AuthInput"
+            type="psw"
+            placeholder="Jelszó"
+            id="password"
+            values={password}
+            required
+          />
+
+          <label>
+            <input type="checkbox" checked="checked" name="remember" /> Maradj bejelentkezve
+          </label>
+
+          <button className="AuthSubmit" type="submit">
+            Bejelentkezés
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+  
+
+function PasswordReset() {
+  const { setAuthModalType } = useContext(DataContext);
+
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        "/api/auth/password/reset/",
+        JSON.stringify({ email }),
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  return (
+    <div className="AuthShadow">
+      <div className="AuthContainer">
+        <div className="Titlebar">
+          <h1>Elfelejtetted a jelszavad?</h1>
+          <img
+            src={closeButton}
+            alt="close-button"
+            className="Close"
+            onClick={() => setAuthModalType("Inactive")}
+          />
+        </div>
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="username">
+            <b>E-mail cím:</b>
+          </label>
+          <input
+            className="AuthInput"
+            type="text"
+            placeholder="E-mail"
+            id="email"
+            values={email}
+            required
+          />
+
+          <button className="AuthSubmit" type="submit">
+            Jelszó helyreállítása
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function AuthenticationModal() {
   const { AuthModalType } = useContext(DataContext);
@@ -117,8 +239,6 @@ export default function AuthenticationModal() {
       return Login();
     case "ResetPassword":
       return PasswordReset();
-    case "DeleteAccount":
-      return DeleteAccount();
     default:
       return null;
   }
