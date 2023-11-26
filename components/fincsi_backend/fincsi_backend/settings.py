@@ -69,7 +69,10 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    #TODO:SECURITY reenable this; was disabled because we couldnt figure out why csrf (in swagger/js) was interacting badly with SessionMiddleware, search for other instances of this comment
+    # https://stackoverflow.com/questions/16458166/how-to-disable-djangos-csrf-validation/47888695#47888695
+    #"django.middleware.csrf.CsrfViewMiddleware",
+    "falatok.util.DisableCSRFMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
