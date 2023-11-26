@@ -1,20 +1,27 @@
-import React, { useContext } from "react";
+import React, { useState, useContext } from "react";
 import DataContext from "../context";
 import closeButton from "../assets/close-button.svg";
+import axios from "../axios";
 
 function Register() {
-  const { toogleAuthMenu } = useContext(AppContext);
+  const {setAuthModalType} = useContext(DataContext);
+  
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password1, setPassword1] = useState("");
+  const [password2, setPassword2] = useState("");
+  
 
-    const HandleSubmit = async(e) => {
+    const handleSubmit = async(e) => {
         e.preventDefault()
         try {
             const response = await axios.post("/api/auth/registration/",
             JSON.stringify({username, email, password1, password2}),
             {
-              headers: {'Context-Type': 'application/json'},
+              headers: {"Content-Type": "application/json"},
               withCredentials: true
             }
-            )
+            );
         } catch (error) {
             console.log(error)
         }
@@ -29,10 +36,10 @@ function Register() {
             src={closeButton}
             alt="close-button"
             className="Close"
-            onClick={toogleAuthMenu}
+            onClick={() => setAuthModalType("Inactive")}
           />
         </div>
-        <form>
+        <form onSubmit={handleSubmit}>
           <label htmlFor="username">
             <b>Felhasználónév</b>
           </label>
@@ -40,7 +47,8 @@ function Register() {
             className="AuthInput"
             type="text"
             placeholder="Felhasználónév"
-            id="uname"
+            id="username"
+            values={username}
             required
           />
 
@@ -51,7 +59,8 @@ function Register() {
             className="AuthInput"
             type="text"
             placeholder="E-mail"
-            id="uname"
+            id="email"
+            values={email}
             required
           />
 
@@ -63,6 +72,7 @@ function Register() {
             type="psw"
             placeholder="Jelszó először"
             id="password1"
+            values={password1}
             required
           />
 
@@ -74,11 +84,12 @@ function Register() {
             type="psw"
             placeholder="Jelszó másodszor"
             id="password2"
+            values={password2}
             required
           />
 
           <label>
-            <input type="checkbox" checked="checked" name="remember" /> Maradjbejelentkezve
+            <input type="checkbox" checked="checked" name="remember" /> Maradj bejelentkezve
           </label>
 
           <button className="AuthSubmit" type="submit">
@@ -101,13 +112,13 @@ export default function AuthenticationModal() {
 
   switch (AuthModalType) {
     case "Register":
-      return Register;
+      return Register();
     case "Login":
-      return Login;
+      return Login();
     case "ResetPassword":
-      return PasswordReset;
+      return PasswordReset();
     case "DeleteAccount":
-      return DeleteAccount;
+      return DeleteAccount();
     default:
       return null;
   }

@@ -13,7 +13,7 @@ export const DataProvider = ({ children }) => {
 
     
     return (
-        <DataContext.Provider value={{ TestText, setTestText}}>
+        <DataContext.Provider value={{ isLoggedIn, AuthModalType, setAuthModalType}}>
         {children}
       </DataContext.Provider>
     )

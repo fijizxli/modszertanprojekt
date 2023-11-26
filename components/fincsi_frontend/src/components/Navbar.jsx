@@ -1,13 +1,13 @@
 import React from 'react'
-import fincsiLogo from '../assets/logo-1024x1115.png'
+import fincsiLogo from '../assets/logo-wide-2400x800.png'
 import { useContext } from 'react'
 import DataContext from '../context'
 
 
 export default function Navbar() {
-  const {setTestText} = useContext(DataContext);
+  const {isLoggedIn} = useContext(DataContext);
 
-  const GuestGreeting = () => {
+  const GuestNavbar = () => {
     const {isLoggedIn, setAuthModalType} = useContext(DataContext);
     
     return <div>
@@ -18,17 +18,24 @@ export default function Navbar() {
         <li>Új recept</li>
         <li className='Spacer'>{isLoggedIn}</li>
         <li className='SignIn'>Bejelentkezés</li>
-        <button className='Profile' onClick={setAuthModalType("Register")}>Regisztráció</button>
-        <p>{isAuthMenuOpen}</p>
+        <button className='Profile' onClick={() => setAuthModalType("Register")}>Regisztráció</button>
       </nav>
     </div>;
   }
   
+  const UserNavbar = () => {
+    <>I am usernavbar</>
+  }
   
-  if (isLoggedIn) {
+  
+  return GuestNavbar();
+  
+  /*  return isLoggedIn ? <UserNavbar /> : <GuestNavbar />;*/
+  
+  /*if (isLoggedIn) {
     return GuestGreeting;
   } else {
     return GuestGreeting;
-  }
+  }*/
   
 }
