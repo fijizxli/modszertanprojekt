@@ -16,12 +16,13 @@ function Register() {
     try {
       const response = await axios.post(
         "/api/auth/registration/",
-        JSON.stringify({ username, email, password1, password2 }),
+        JSON.stringify({ username, password1, password2 }),
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
         }
       );
+      console.log(response);
     } catch (error) {
       console.log(error);
     }
@@ -46,13 +47,14 @@ function Register() {
           <input
             className="AuthInput"
             type="text"
+            onChange={(e) => setUsername(e.target.value)}
             placeholder="Felhasználónév"
             id="username"
             values={username}
             required
           />
 
-          <label htmlFor="email">
+          {/* <label htmlFor="email">
             <b>E-mail</b>
           </label>
           <input
@@ -61,17 +63,17 @@ function Register() {
             placeholder="E-mail"
             id="email"
             values={email}
-            required
-          />
+          /> */}
 
           <label htmlFor="password1">
             <b>Jelszó</b>
           </label>
           <input
             className="AuthInput"
-            type="psw"
+            type="password"
             placeholder="Jelszó először"
             id="password1"
+            onChange={(e) => setPassword1(e.target.value)}
             values={password1}
             required
           />
@@ -81,16 +83,17 @@ function Register() {
           </label>
           <input
             className="AuthInput"
-            type="psw"
+            type="password"
             placeholder="Jelszó másodszor"
             id="password2"
+            onChange={(e) => setPassword2(e.target.value)}
             values={password2}
             required
           />
 
-          <label>
-            <input type="checkbox" checked="checked" name="remember" /> Szeretnél bejelentkezni inkább?
-          </label>
+          {/* <label>
+            <input type="checkbox" checked="unchecked" name="remember" /> Szeretnél bejelentkezni inkább?
+          </label> */}
 
           <button className="AuthSubmit" type="submit">
             Regisztráció
@@ -145,6 +148,7 @@ function Login() {
             placeholder="Felhasználónév"
             id="username"
             values={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
           
@@ -153,10 +157,11 @@ function Login() {
           </label>
           <input
             className="AuthInput"
-            type="psw"
+            type="password"
             placeholder="Jelszó"
             id="password"
             values={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
 
