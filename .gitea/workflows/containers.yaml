@@ -9,13 +9,76 @@ on: [push]
 #  https://github.com/redhat-actions/buildah-build
 #  https://github.com/redhat-actions/push-to-registry
 jobs:
-  build-images:
-    # The image used is from https://github.com/catthehacker/docker_images , though the images recommended by distrobox may also be of interest (the image has to be set up in the runner)
+  info:
     runs-on: ubuntu-22.04
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ gitea.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by Gitea!"
       - run: echo "🔎 The name of your branch is ${{ gitea.ref }} and your repository is ${{ gitea.repository }}."
+      - run: echo "💡 The ${{ gitea.repository }} repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+  lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: fix distro
+        run: |
+          set -x
+          # https://stackoverflow.com/questions/41032744/unable-to-edit-etc-resolv-conf-in-docker-container/57606548#57606548
+          echo "$(sed 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf)" > /etc/resolv.conf
+          echo '/nix/var/nix/profiles/default/bin' >> $GITHUB_PATH
+          mount -t overlay overlay -o lowerdir=/nix/store:/nix/store-host /nix/store
+          nix-env -iA nixpkgs.actionlint && nix-env -iA nixpkgs.shellcheck
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: List files in the repository
+        run: |
+          ls ${{ gitea.workspace }}
+      - name: lint-actions #TODO clean stuff up enough to make this usable
+        run: actionlint .gitea/workflows/*.yaml || true
+      - name: code-quality
+        run: components/fincsi_backend/scripts/tests/shellcheck.bash
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: fix distro
+        run: |
+          set -x
+          # https://stackoverflow.com/questions/41032744/unable-to-edit-etc-resolv-conf-in-docker-container/57606548#57606548
+          echo "$(sed 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf)" > /etc/resolv.conf
+          echo '/nix/var/nix/profiles/default/bin' >> $GITHUB_PATH
+          mount -t overlay overlay -o lowerdir=/nix/store:/nix/store-host /nix/store
+          nix-env -iA nixpkgs.postgresql
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: List files in the repository
+        run: |
+          ls ${{ gitea.workspace }}
+      - name: python-unit-tests
+        run: |
+          cd components/fincsi_backend/
+          podman run -dit --rm -p 8001:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=fincsidb postgres
+          # TODO dont know a short quick way to do this other than waiting...
+          sleep 5
+          nix-shell default.nix -A shell --run "python manage.py test -v 3"
+      - name: python-unit-tests-cleanup
+        run: podman stop -a
+      - name: react-unit-tests
+        run: |
+          cd components/fincsi_frontend
+          npm install
+          CI=true npm test -- --passWithNoTests
+      - name: end-to-end-tests # TODO bash scripted compose bringup, check database gets data
+        run: true
+      - name: tooling-integration-tests
+        run: |
+          cd components/fincsi_backend/
+          nix-shell default.nix -A shell --run "scripts/tests/testenvs.bash"
+  build-images:
+    needs: test
+    # The image used is from https://github.com/catthehacker/docker_images , though the images recommended by distrobox may also be of interest (the image has to be set up in the runner)
+    runs-on: ubuntu-22.04
+    steps:
 #      - name: fix distro
 #        run: |
 #          set -x
@@ -39,15 +102,13 @@ jobs:
           # https://stackoverflow.com/questions/41032744/unable-to-edit-etc-resolv-conf-in-docker-container/57606548#57606548
           echo "$(sed 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf)" > /etc/resolv.conf
           echo '/nix/var/nix/profiles/default/bin' >> $GITHUB_PATH
+          mount -t overlay overlay -o lowerdir=/nix/store:/nix/store-host /nix/store
           mkdir /tmp/pls
       - name: Check out repository code
         uses: actions/checkout@v3
-      - run: echo "💡 The ${{ gitea.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: List files in the repository
         run: |
           ls ${{ gitea.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
       - name: Build image
         id: build-image
         uses: redhat-actions/buildah-build@v2
@@ -77,3 +138,14 @@ jobs:
 
       - name: Print iamge URL
         run: echo "Image puhed to ${{ steps.push-to-kolmo.outputs.registry-paths }}"
+  deploy: #TODO
+    needs: build-images
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: List files in the repository
+        run: |
+          ls ${{ gitea.workspace }}
+      - name: trigger-remote-image-pull
+        run: true
