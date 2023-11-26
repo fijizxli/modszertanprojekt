@@ -6,3 +6,4 @@ psycopg[binary]
 drf-spectacular
 python-dotenv
 pillow
+django-debug-toolbar
