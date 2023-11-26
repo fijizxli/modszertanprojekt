@@ -19,18 +19,9 @@ PROJ_ROOT=$(dirname $(dirname -- "$SCRIPT_DIR"))
 
 on_exit() {
   [[ "$pid" ]] && { kill -SIGINT "$pid" "${procs[@]}"; wait "$pid" "${procs[@]}"; }
-#  kill -SIGTERM "$handlepid"
-#  rm "$PROJ_ROOT/run/tests_cleanup_handle_$$"
   }
 
-#mk_cleanup_handle() {
-#  mkdir -p "$PROJ_ROOT/run"
-#  sleep inf & handlepid=$!
-#  echo "$handlepid" >> "$PROJ_ROOT/run/tests_cleanup_handle_$$"
-#  }
-
 trap on_exit EXIT
-#mk_cleanup_handle
 
 cd "$PROJ_ROOT/fincsi_frontend"
 
@@ -39,7 +30,6 @@ cd "$PROJ_ROOT/fincsi_frontend"
 { npm start | cat -; } & pid=$!
 #TODO I dont know why we need to fight with the process tree of npm start
 #TODO IDK how long we need to sleep
-#TODO this causes issues with the cleanup handle stuff that we probably dont actually need because of wait
 sleep 4; procs=($(get_children))
 #npm start & pid=$!
 wait "$pid"

@@ -42,7 +42,7 @@ start_postgres() {
   }
 
 # A hook to stop the postgresql container that we startef on exit (if we started it, and the user doesnt explcitly tell us to keep it)
-#  Inputs: $cont_id global variable, $running_postgres global variable, $keep_postgres environment variable, $container_manager global variable, $runner_pids global variable, $handlepid global variable
+#  Inputs: $cont_id global variable, $running_postgres global variable, $keep_postgres environment variable, $container_manager global variable, $runner_pids global variable
 #  Outputs: none
 on_exit() {
   if [[ "$running_postgres" -eq "1" ]] && [[ ! "$keep_postgres" -eq "1" ]]; then
@@ -52,16 +52,7 @@ on_exit() {
     echo "we didnt start the possible postgres container ourselves, or we were told to keep it, not doing any cleanup"
   fi
   [[ "$runner_pids" ]] && { kill -SIGTERM "${runner_pids[@]}"; wait "${runner_pids[@]}"; }
-#  kill -SIGTERM "$handlepid"
-#  rm "$PROJ_ROOT/run/tests_cleanup_handle_$$"
   }
-
-#mk_cleanup_handle() {
-#  mkdir -p "$PROJ_ROOT/run"
-#  sleep inf & handlepid=$!
-#  echo "$handlepid" >> "$PROJ_ROOT/run/tests_cleanup_handle_$$"
-#  }
-
 
 # Inputs: $container_manager environment variable
 # Outputs: sets and exports DOTENV
@@ -74,7 +65,6 @@ main(){
   running_postgres=0
 
   trap on_exit EXIT
-  #mk_cleanup_handle
 
   # Load global environment variables / overrides from env file
   export DOTENV=env.split

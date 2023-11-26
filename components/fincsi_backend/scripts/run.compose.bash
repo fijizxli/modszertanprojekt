@@ -13,22 +13,13 @@ on_exit() {
   [[ "$pid" ]] && { kill -SIGTERM "$pid"; wait "$pid"; }
   #TODO need a way to allow creating isolated temporary volumes
   "$container_manager" compose down ${delete_volumes:+-v}
-#  kill -SIGTERM "$handlepid"
-#  rm "$PROJ_ROOT/run/tests_cleanup_handle_$$"
   }
-
-#mk_cleanup_handle() {
-#  mkdir -p "$PROJ_ROOT/run"
-#  sleep inf & handlepid=$!
-#  echo "$handlepid" >> "$PROJ_ROOT/run/tests_cleanup_handle_$$"
-#  }
 
 main() {
   # Provide a way to use podman instead
   container_manager=${container_manager:-docker}
 
   trap on_exit EXIT
-  #mk_cleanup_handle
 
   #TODO need to special-case podman
   "$container_manager" compose up -d
