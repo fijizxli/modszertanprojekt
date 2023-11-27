@@ -3,6 +3,12 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.App {
+  height: 100vh;
+  width: 100vw;
+}
+
+
 nav {
   height: 5rem;
   position: sticky;
@@ -204,6 +210,10 @@ nav li :hover {
   border-radius: 20px;
 }
 
+nav .SignIn {
+  cursor: pointer;
+}
+
 
 nav li.Spacer {
   margin: auto;
@@ -244,6 +254,7 @@ footer {
   display: flex;
   flex-direction: column;
   padding-top: 2rem;
+  bottom: 0;
 }
 
 footer p {
@@ -304,6 +315,9 @@ button.AuthSubmit {
  color: #fff; /* Text color */
  border: none; /* Remove border */
 }
+button.AuthSubmit:hover {
+  background-color: darkorange;
+}
 
 input.AuthInput {
   font-size: medium;
@@ -327,4 +341,12 @@ input.AuthInput {
   margin-left: auto;
   margin-right: 0.5rem;
   cursor: pointer;
+}
+.errorMessage{
+  background-color: rgb(255, 200, 200);
+  border: 2px solid #ff0000; 
+  border-radius: 0.3rem;
+  padding: 0.5rem 0.2rem 0.5rem 0.2rem;
+  margin-bottom: 0.5rem;
+  width:96%
 }
