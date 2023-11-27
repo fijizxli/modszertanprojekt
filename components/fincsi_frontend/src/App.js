@@ -8,6 +8,10 @@ import AuthenticationModal from "./components/AuthenticationModal";
 import Teszt from "./components/Teszt";
 import Recipe from "./components/Recipe"
 import "./components/Recipe"
+import "./components/AddRecipe"
+import AddRecipe from "./components/AddRecipe"
+import Search from "./components/Search"
+import "./components/Search"
 import RecipeList from "./components/RecipeList"
 import "./components/RecipeList"
 import {BrowserRouter, Routes, Route} from "react-router-dom";
@@ -31,6 +35,7 @@ function App() {
     <DataProvider>
       <div className="App">
         <Navbar />
+        <AddRecipe/>
         <RecipeList/>
         <AuthenticationModal />
         <Footer />
