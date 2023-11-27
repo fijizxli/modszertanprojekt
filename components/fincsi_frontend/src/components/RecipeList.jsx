@@ -17,8 +17,7 @@ export default function RecipeList() {
         });
     }, []);
 
-    console.log(selectedRecipe);
-    if (!selectedRecipe){
+  
     return (
             <div className="recipeList">
             <h1>Felfedezés</h1>
@@ -37,7 +36,5 @@ export default function RecipeList() {
                 ))}
             </table>
         </div>
-        );}else {
-            return <Recipe recipe={selectedRecipe} />;
-        }
+        );
     }
