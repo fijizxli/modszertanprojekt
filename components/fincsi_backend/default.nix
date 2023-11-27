@@ -26,5 +26,5 @@ in env // {
   shell = env.env.overrideAttrs (o: {
       buildInputs = with pkgs; [ niv poetry postgresql postgresql.lib ]; 
       });
-  newShell = pkgs.mkShell { buildInputs = with pkgs; [ niv poetry ]; };
+  newShell = pkgs.mkShell { buildInputs = with pkgs; [ niv poetry podman docker podman-compose ]; };
   }
