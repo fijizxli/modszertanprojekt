@@ -139,14 +139,14 @@ jobs:
 
       - name: Print iamge URL
         run: echo "Image puhed to ${{ steps.push-to-kolmo.outputs.registry-paths }}"
-  deploy: #TODO
-    needs: build-images
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - name: List files in the repository
-        run: |
-          ls ${{ gitea.workspace }}
-      - name: trigger-remote-image-pull
-        run: true
+#  deploy: #TODO
+#    needs: build-images
+#    runs-on: ubuntu-22.04
+#    steps:
+#      - name: Check out repository code
+#        uses: actions/checkout@v3
+#      - name: List files in the repository
+#        run: |
+#          ls ${{ gitea.workspace }}
+#      - name: trigger-remote-image-pull
+#        run: true
