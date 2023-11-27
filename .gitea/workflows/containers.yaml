@@ -103,7 +103,8 @@ jobs:
           echo "$(sed 's/10.89.0.1/10.89.1.1/' /etc/resolv.conf)" > /etc/resolv.conf
           echo '/nix/var/nix/profiles/default/bin' >> $GITHUB_PATH
           mount -t overlay overlay -o lowerdir=/nix/store:/nix/store-host /nix/store
-          mkdir /tmp/pls
+          # Buildah complains?
+          mkdir -p /tmp/pls /root/.cache/pip
       - name: Check out repository code
         uses: actions/checkout@v3
       - name: List files in the repository
