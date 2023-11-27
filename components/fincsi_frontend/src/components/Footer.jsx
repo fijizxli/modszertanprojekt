@@ -1,7 +1,10 @@
 import React from 'react'
 import footerDecorator from '../assets/footer-decorator.png'
+import { useContext } from 'react'
+import DataContext from '../context'
 
 export default function Footer() {
+  const {isLoggedIn} = useContext(DataContext)
   return (
     <footer>
         <div>

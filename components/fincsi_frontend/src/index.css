@@ -3,6 +3,11 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.App {
+  height: 100vh;
+  width: 100vw;
+}
+
 nav {
   height: 5rem;
   position: sticky;
@@ -11,7 +16,7 @@ nav {
   display: flex;
   flex-direction: row;
   align-items: center;
-  
+
   background-color: rgb(254, 251, 236);
 }
 
@@ -53,7 +58,7 @@ nav {
 }
 
 .recipeList tr:hover {
-  background-color:lemonchiffon;
+  background-color: lemonchiffon;
   border-radius: 20px;
 }
 
@@ -104,12 +109,18 @@ nav .Profile {
   cursor: pointer;
   border-radius: 10px;
   background-color: orange;
-  color: #fff; /* Text color */
-  border: none; /* Remove border */
+  color: #fff;
+  /* Text color */
+  border: none;
+  /* Remove border */
 }
 
 nav .Profile:hover {
   background-color: darkorange;
+}
+
+nav .SignIn {
+  cursor: pointer;
 }
 
 nav .SignIn:hover {
@@ -122,10 +133,12 @@ footer {
   display: flex;
   flex-direction: column;
   padding-top: 2rem;
+  position: sticky;
+  bottom: 0;
 }
 
 footer p {
-  color:dimgray;
+  color: dimgray;
   margin: 2rem;
   display: inline;
 }
@@ -138,7 +151,7 @@ footer img {
   align-self: center;
   margin-bottom: 0;
   margin: auto;
-  max-width:100%;
+  max-width: 100%;
 }
 
 .AuthShadow {
@@ -169,8 +182,8 @@ footer img {
 button.AuthSubmit {
   margin: 5rem, 5rem 5rem 5rem;
   display: inline-block;
-  width:20rem;
-  height:3rem;
+  width: 20rem;
+  height: 3rem;
   margin: auto;
   font-size: 16px;
   font-weight: bold;
@@ -179,8 +192,14 @@ button.AuthSubmit {
   cursor: pointer;
   border-radius: 10px;
   background-color: orange;
- color: #fff; /* Text color */
- border: none; /* Remove border */
+  color: #fff;
+  /* Text color */
+  border: none;
+  /* Remove border */
+}
+
+button.AuthSubmit:hover {
+  background-color: darkorange;
 }
 
 input.AuthInput {
@@ -205,4 +224,13 @@ input.AuthInput {
   margin-left: auto;
   margin-right: 0.5rem;
   cursor: pointer;
+}
+
+.errorMessage{
+  background-color: rgb(255, 200, 200);
+  border: 2px solid #ff0000; 
+  border-radius: 0.3rem;
+  padding: 0.5rem 0.2rem 0.5rem 0.2rem;
+  margin-bottom: 0.5rem;
+  width:96%
 }
