@@ -35,6 +35,7 @@ function App() {
           <Route path = "recipes/:recipeId" element={<Recipe/>}/>;
           <Route path = "search" element={<Search/>}/>;
         </Routes>
+      <AuthenticationModal />
       <Footer/>
     </BrowserRouter>
     </DataProvider>
