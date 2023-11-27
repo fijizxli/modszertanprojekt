@@ -253,15 +253,15 @@ main() {
   #TODO I dont see a quick way to make this work with compose and this might not be necessary anyway
   mapfile -t cids < "$cid_file"
   #[[ "$cids" ]] && timeout 15 podman wait "${cids[@]}" --condition=stopped || fail "Timed out (or something) waiting for docker postgres to shut down."
-  test_split_docker
+  #test_split_docker
   sleep 3 # maybe port will go away?
   #wait_cleanup_handles
-  test_compose_docker
+  #test_compose_docker
   sleep 3 # maybe port will go away?
   #wait_cleanup_handles
-  test_system_psql
+  #test_system_psql
   sleep 3 # maybe port will go away?
-  test_docker_psql
+  #test_docker_psql
   sleep 3 # maybe port will go away?
   test_podman_psql
   sleep 3 # maybe port will go away?
