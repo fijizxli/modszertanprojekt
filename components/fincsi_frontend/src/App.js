@@ -14,6 +14,7 @@ import Search from "./components/Search"
 import "./components/Search"
 import RecipeList from "./components/RecipeList"
 import "./components/RecipeList"
+
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 /**
  * Navbar // add @media css rules for navbar
@@ -24,23 +25,28 @@ import {BrowserRouter, Routes, Route} from "react-router-dom";
 
 function App() {
   return (
-    //TODO routing
-    // <DataProvider>
-    // <BrowserRouter>
-    //   <Routes>
-    //     <Route path = "/" element={<div><Navbar/> <RecipeList/> <Footer/> </div>}/>;
-    //   </Routes>
-    // </BrowserRouter>
-    // </DataProvider>
     <DataProvider>
-      <div className="App">
-        <Navbar />
-        <AddRecipe/>
-        <RecipeList/>
-        <AuthenticationModal />
-        <Footer />
-      </div>
+    <BrowserRouter>
+      <Navbar/> 
+        <Routes>
+          <Route path = "/" element={<RecipeList/>}/>;
+          <Route path = "recipes" element={<RecipeList/>}/>;
+          <Route path = "addrecipe" element={<AddRecipe/>}/>;
+          <Route path = "recipes/:recipeId" element={<Recipe/>}/>;
+          <Route path = "search" element={<Search/>}/>;
+        </Routes>
+      <Footer/>
+    </BrowserRouter>
     </DataProvider>
+    // <DataProvider>
+    //   <div className="App">
+    //     <Navbar />
+    //     <AddRecipe/>
+    //     <RecipeList/>
+    //     <AuthenticationModal />
+    //     <Footer />
+    //   </div>
+    // </DataProvider>
   );
 }
 

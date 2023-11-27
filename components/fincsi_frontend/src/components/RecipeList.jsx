@@ -2,6 +2,7 @@ import axios from "../axios";
 import { useState, useEffect} from 'react'
 import Recipe from "./Recipe"
 import "./Recipe"
+import {Link} from 'react-router-dom';
 
 export default function RecipeList() {
     const [recipeList, setRecipeList] = useState([]);
@@ -26,14 +27,15 @@ export default function RecipeList() {
                 <th></th>
                 <th>Elkészítési idő</th>
                 {recipeList?.map((recipe) => (
-                <tr key={recipe.id} onClick={() => handleRecipeSelect(recipe)}> 
-                <td>{recipe.title}</td>
-                <td><img src={recipe.photo} alt="nincs kep"></img></td>
-                <td>{recipe.cooking_time}</td>
+                <tr key={recipe.id}>
+                
+                <td><Link to={`/recipes/${recipe.id}`}>{recipe.title}</Link></td>
+                <td><Link to={`/recipes/${recipe.id}`}><img src={recipe.photo} alt="nincs kep"></img></Link></td>
+                <td><Link to={`/recipes/${recipe.id}`}>{recipe.cooking_time}</Link></td>
+                
                 </tr>
                 ))}
             </table>
-            {/* {selectedRecipe && <Recipe recipe={selectedRecipe} />} */}
         </div>
         );}else {
             return <Recipe recipe={selectedRecipe} />;

@@ -1,17 +1,22 @@
 import axios from "../axios";
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
 
-export default function Recipe (recipe) {
-    // const [reciperesponse, setRecipereciperesponse] = useState([]);
-    recipe = recipe.recipe
+
+export default function Recipe () {
+    const [recipe, setRecipe] = useState([]);
+    //recipe = recipe.recipe
+
+    const {recipeId} = useParams();
+    console.log(recipeId);
     //console.log(recipe.recipe.id);
-    // useEffect(()=>{
-    // axios.get('/api/falatok/recipes/' + recipe.recipe.id).then(function (response) {
-    //     console.log(recipe_id);
-    //     setRecipe(response.data);
-    // });
-    // }, []);
+    useEffect(()=>{
+    axios.get('/api/falatok/recipes/' + recipeId + "/").then(function (response) {
+        setRecipe(response.data);
+        console.log(response);
+    });
+    }, []);
 
     return <div className="recipe">
         <h1>{recipe.title}</h1>

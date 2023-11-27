@@ -32,7 +32,7 @@ nav {
 p { white-space: pre-wrap; }
 
 .addrecipeform {
-  padding: 3rem;
+  padding: 2rem;
   margin:auto;
   font-size: large;
   font-weight: bold;
@@ -119,6 +119,16 @@ p { white-space: pre-wrap; }
   border-radius: 20px;
 }
 
+.recipeList td :link {
+  text-decoration: none;
+  color:royalblue;
+}
+
+.recipeList td :visited {
+  text-decoration: none;
+  color:royalblue;
+}
+
 .recipeList th {
   font-size: x-large;
   background-color: #da1c08;
@@ -168,8 +178,32 @@ nav ul {
 
 nav li {
   list-style: none;
-  padding: 0 2rem 0 2rem;
+  padding: 0rem 2rem 0rem 2rem;
+  height: 1rem;
+  text-transform: uppercase;
 }
+
+nav li :link{
+  color: black;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: large;
+  padding: 0.5rem;
+}
+
+nav li :visited{
+  color: black;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: x-large;
+}
+
+nav li :hover {
+  background-color: #da1c08;
+  color: #fff;
+  border-radius: 20px;
+}
+
 
 nav li.Spacer {
   margin: auto;
