@@ -34,5 +34,9 @@ export default function Recipe () {
         <p><b>Előkészülési idő: </b>{recipe.preparation_time} </p>
         <p><b>Elkészítési idő: </b>{recipe.cooking_time} </p>
 
+        <p>Szerkesztő: <i>{recipe.owner}</i></p>
+
+        {recipe.guide != null && <a href={recipe.guide}>oktató anyag</a>}
+
     </div>
 }
