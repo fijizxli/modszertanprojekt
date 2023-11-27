@@ -10,7 +10,7 @@ services:
     depends_on:
       - db
     env_file:
-      - ./.env.dev
+      - ./env.compose
   db:
     image: postgres
     environment:

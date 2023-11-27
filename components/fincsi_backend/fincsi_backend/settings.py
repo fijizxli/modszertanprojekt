@@ -13,8 +13,12 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import logging
 
-load_dotenv(dotenv_path=".env.dev")
+if not os.environ.get("DOTENV_SET", default=False):
+  dotenv_path = os.environ.get("DOTENV", default="env.split")
+  logging.info("DOTENV_SET not set, loading dotenv: %s", dotenv_path)
+  load_dotenv(dotenv_path=dotenv_path)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
