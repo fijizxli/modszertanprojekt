@@ -32,8 +32,10 @@ export default function Recipe() {
                 }
             );
             console.log(response);
+            alert("Recept sikeresen hozzáadva");
         } catch (error) {
             console.log(error);
+            alert(error);
         }
     };
 
