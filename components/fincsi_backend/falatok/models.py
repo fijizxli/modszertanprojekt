@@ -15,7 +15,7 @@ class Recipe(models.Model):
     cooking_time = models.DurationField(blank=True, null=True)
     photo = models.ImageField(blank=True, null=True)
 
-    guides = ArrayField(models.URLField(blank=True), blank=True, null=True)
+    guides = models.URLField(blank=True, null=True)
 
     class Meta:
         ordering = ["owner", "title"]
